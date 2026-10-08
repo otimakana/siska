@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SISKA V2 — Sistem Informasi Kinerja SMK Grafika</title>
+<meta name="siska-build" content="SUPABASE-FINAL-2026-10-08"><title>SISKA V2 — Sistem Informasi Kinerja SMK Grafika</title>
 <link rel="icon" href="https://smkgrafikakotatangerang.sch.id/media_library/images/1066f1ed8a85da3bd8d5729e41d9ec5c.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,34 +26,12 @@
 .pk4-range-bar{display:flex;align-items:end;gap:10px;padding:13px;background:#f7faff;border:1px solid #dceaff;border-radius:15px;margin-bottom:9px;flex-wrap:wrap}.pk4-range-field{min-width:170px;flex:1}.pk4-range-field label{display:block;font-size:10px;font-weight:800;color:#667085;margin:0 0 5px 2px}.pk4-range-arrow{padding:0 2px 10px;color:#98a2b3;font-weight:800}.pk4-range-caption{display:flex;gap:6px;align-items:center;margin:0 2px 13px;color:#667085;font-size:10px}.pk4-range-caption strong{font-family:"Space Grotesk";font-size:15px;color:#172033}@media(max-width:700px){.pk4-range-arrow{display:none}.pk4-range-field{min-width:140px}.pk4-range-bar .btn{flex:1}}
 /* ===== Dashboard visual refresh ===== */
 .dashboard-label-row{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:22px 0 10px;padding:0 2px}.dashboard-label-row h3{margin:2px 0 0;font-size:18px;letter-spacing:-.02em;color:#172033}.eyebrow{display:block;font-size:9px;line-height:1;font-weight:900;letter-spacing:.12em;color:#6b7a90;margin-bottom:6px}.employee-stat-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}.employee-stat-card{position:relative;display:flex;align-items:center;gap:12px;min-height:92px;padding:14px 15px;background:rgba(255,255,255,.96);border:1px solid #e5ebf3;border-radius:17px;box-shadow:0 7px 20px rgba(30,65,110,.055);overflow:hidden;transition:.18s ease}.employee-stat-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--e-accent)}.employee-stat-card:after{content:"";position:absolute;width:78px;height:78px;border-radius:50%;right:-34px;top:-35px;background:color-mix(in srgb,var(--e-accent) 10%,white)}.employee-stat-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(30,65,110,.09);border-color:#d6e1ef}.employee-stat-icon{position:relative;z-index:1;flex:0 0 39px;width:39px;height:39px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--e-accent) 10%,white);color:var(--e-accent);font-size:15px;font-weight:900}.employee-stat-main{position:relative;z-index:1;min-width:0}.employee-stat-name{font-size:11px;font-weight:800;color:#536176;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}.employee-stat-count{font-family:"Space Grotesk",sans-serif;font-size:27px;line-height:1.05;font-weight:800;color:#172033;letter-spacing:-.04em;margin-top:3px}.employee-stat-label{font-size:9px;color:#98a2b3;margin-top:2px}.dashboard-kpi-section{margin-top:16px}.dashboard-section-head{margin-bottom:15px}.kpi-row{grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.kpi-modern{position:relative;min-height:154px;padding:17px 18px 15px;border:1px solid #e2e9f2;border-radius:18px;background:linear-gradient(145deg,#fff 0%,#f9fbfe 100%);box-shadow:0 8px 22px rgba(30,65,110,.055);overflow:hidden;transition:.18s ease}.kpi-modern:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--k-accent)}.kpi-modern:after{content:"";position:absolute;width:105px;height:105px;border-radius:50%;right:-50px;top:-52px;background:var(--k-soft)}.kpi-modern:hover{transform:translateY(-2px);box-shadow:0 13px 28px rgba(30,65,110,.09)}.kpi-modern-head{position:relative;z-index:1;display:flex;align-items:center;gap:8px}.kpi-code{font-size:10px;font-weight:900;color:var(--k-accent);letter-spacing:.08em}.kpi-icon-modern{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--k-soft);color:var(--k-accent);font-size:14px;font-weight:900}.kpi-title-modern{font-size:12px;font-weight:800;color:#536176}.kpi-modern-value{position:relative;z-index:1;margin-top:17px;font-family:"Space Grotesk",sans-serif;font-size:43px;line-height:.95;font-weight:800;letter-spacing:-.055em;color:#172033}.kpi-modern-value span{font-family:Inter,sans-serif;font-size:17px;font-weight:800;color:#7b8798;margin-left:3px;letter-spacing:0}.kpi-modern-foot{position:relative;z-index:1;display:flex;align-items:center;gap:6px;margin-top:14px;font-size:9px;font-weight:700;color:#8a95a5}.kpi-status-dot{width:7px;height:7px;border-radius:50%;background:#cbd2dc}.kpi-status-dot.is-data{background:#22a06b;box-shadow:0 0 0 3px #e8f7f0}.dashboard-lower-grid{grid-template-columns:1.05fr .95fr;margin-top:16px}.dashboard-chart-card .chart-wrap{min-height:235px;display:flex;align-items:center;justify-content:center}.dashboard-chart-card canvas{max-width:100%}.dashboard-rules-card{margin-top:16px}.recent-item{padding:11px 0!important}.recent-item strong{font-size:11px}.recent-item small{font-size:9px!important;color:#8a95a5!important}@media(max-width:1100px){.employee-stat-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.kpi-row{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:760px){.dashboard-label-row{align-items:flex-start;flex-direction:column;gap:4px}.employee-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-row{grid-template-columns:1fr}.dashboard-lower-grid{grid-template-columns:1fr!important}.employee-stat-card{min-height:84px}.employee-stat-name{max-width:calc(100vw - 150px)}}
-
-/* ===== UI polish & fast interaction ===== */
-/* Status input visual */
-.attend-check{width:20px;height:20px;accent-color:#16a36a;cursor:pointer;vertical-align:middle;transition:transform .12s ease,filter .12s ease}
-.attend-check:hover{transform:scale(1.08);filter:brightness(.98)}
-.attend-check:checked{accent-color:#16a36a}
-.attend-check:focus-visible{outline:3px solid rgba(22,163,106,.18);outline-offset:2px}
-.attend-cell-active{background:#e9f9f2!important}
-.status-select{min-width:118px;appearance:auto;border:1px solid #d8e1eb;background:#fff;color:#344054;border-radius:9px;padding:7px 28px 7px 9px;font-size:10px;font-weight:800;transition:background-color .12s ease,border-color .12s ease,color .12s ease,box-shadow .12s ease,transform .12s ease;cursor:pointer}
-.status-select:hover{border-color:#aebdce;box-shadow:0 2px 8px rgba(30,65,110,.08);transform:translateY(-1px)}
-.status-select:focus{outline:none;box-shadow:0 0 0 3px rgba(23,105,224,.12);border-color:#8cb5ef}
-.status-select.status-hadir{background:#e8f7ef;border-color:#8fd1b1;color:#08754e}
-.status-select.status-hadir:hover{background:#dff3e9;border-color:#63b98e}
-.status-select.status-sakit{background:#fff7df;border-color:#efd48a;color:#986300}
-.status-select.status-izin{background:#edf5ff;border-color:#b8d2f8;color:#1557bd}
-.status-select.status-alpha{background:#fff0f0;border-color:#efb0b0;color:#c33f3f}
-.status-select:not(.status-hadir):not(.status-sakit):not(.status-izin):not(.status-alpha){background:#f8fafc}
-input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointer;vertical-align:middle}
-[data-attend]{accent-color:#10a36b}
-.table tbody tr{transition:background-color .1s ease}
-.card,.kpi,.kpi-modern,.employee-stat-card,.recent-item,.schedule-item,.assignment-item{contain:layout paint}
-.table-wrap{contain:layout paint;overscroll-behavior:contain}
-.content{contain:layout style}
-.loading{transition:opacity .12s ease;will-change:opacity}.loader-box{contain:layout paint}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script src="./siska-api.js"></script>
 </head>
 <body>
 <div id="loading" class="loading hidden"><div class="loader-box"><div class="spinner"></div><div id="loadingText" style="margin-top:10px;font-size:11px;font-weight:700">mengambil data</div></div></div>
@@ -99,33 +77,33 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
   <div class="content">
 
   <section id="view-dashboard" class="view">
-    <div class="page-head"><div><h1>Dashboard Kinerja</h1><p>Ringkasan pegawai dan capaian kinerja.</p></div><div class="actions"><button class="btn" onclick="loadDashboard(true)">↻ Refresh</button></div></div>
-    <div class="hero"><div class="hero-row"><div><span class="pill">● SISTEM AKTIF</span><h2 style="margin-top:10px">Kelola kinerja sekolah dengan lebih ringkas.</h2><p>Pantau pegawai dan capaian kinerja dalam satu tampilan.</p></div><div style="font-size:45px;opacity:.9">◈</div></div></div>
-    <div class="dashboard-label-row"><div><span class="eyebrow">RINGKASAN SDM</span><h3>Pegawai Aktif</h3></div><span class="muted">Jumlah pegawai per kategori</span></div>
+    <div class="page-head"><div><h1>Dashboard Kinerja</h1><p>Ringkasan kondisi pegawai dan pencapaian indikator kinerja.</p></div><div class="actions"><button class="btn" onclick="loadDashboard(true)">↻ Refresh</button></div></div>
+    <div class="hero"><div class="hero-row"><div><span class="pill">● SISTEM AKTIF</span><h2 style="margin-top:10px">Kelola kinerja sekolah dengan lebih ringkas.</h2><p>Profil pegawai menjadi pusat data. Perubahan Guru, Tendik, atau Struktural akan langsung mengikuti konfigurasi indikator yang berlaku.</p></div><div style="font-size:45px;opacity:.9">◈</div></div></div>
+    <div class="dashboard-label-row"><div><span class="eyebrow">RINGKASAN SDM</span><h3>Pegawai Aktif</h3></div><span class="muted">Distribusi berdasarkan kategori penilaian</span></div>
     <div id="categoryStatCards" class="employee-stat-grid"></div>
 
     <div class="dashboard-section-card card section dashboard-kpi-section">
-      <div class="section-head dashboard-section-head"><div><span class="eyebrow">PERFORMA</span><h3>Rerata per PK</h3><span class="muted">Rerata penilaian yang sudah tersedia.</span></div></div>
+      <div class="section-head dashboard-section-head"><div><span class="eyebrow">PERFORMA</span><h3>Rerata per PK</h3><span class="muted">Nilai rata-rata dari penilaian yang sudah terisi.</span></div></div>
       <div id="kpiRows" class="kpi-row"></div>
     </div>
 
     <div class="grid dashboard-grid dashboard-lower-grid">
-      <div class="card section dashboard-chart-card"><div class="section-head"><div><span class="eyebrow">KOMPOSISI</span><h3>Sebaran Kategori Pegawai</h3><span class="muted">Komposisi pegawai aktif.</span></div></div><div class="chart-wrap"><canvas id="categoryChart" height="210"></canvas></div></div>
-      <div class="card section"><div class="section-head"><div><span class="eyebrow">AKTIVITAS</span><h3>Pengisian Terakhir</h3><span class="muted">Data penilaian terbaru.</span></div></div><div id="recentList" class="recent"></div></div>
+      <div class="card section dashboard-chart-card"><div class="section-head"><div><span class="eyebrow">KOMPOSISI</span><h3>Sebaran Kategori Pegawai</h3><span class="muted">Pegawai aktif berdasarkan kategori.</span></div></div><div class="chart-wrap"><canvas id="categoryChart" height="210"></canvas></div></div>
+      <div class="card section"><div class="section-head"><div><span class="eyebrow">AKTIVITAS</span><h3>Pengisian Terakhir</h3><span class="muted">Penilaian terbaru yang masuk ke sistem.</span></div></div><div id="recentList" class="recent"></div></div>
     </div>
-    <div class="card section dashboard-rules-card"><div class="section-head"><div><span class="eyebrow">KONFIGURASI</span><h3>Aturan Penilaian</h3><span class="muted">PK aktif per kategori.</span></div></div><div id="rulesList"></div></div>
+    <div class="card section dashboard-rules-card"><div class="section-head"><div><span class="eyebrow">KONFIGURASI</span><h3>Aturan Penilaian</h3><span class="muted">Indikator aktif pada masing-masing kategori.</span></div></div><div id="rulesList"></div></div>
   </section>
 
   <section id="view-pegawai" class="view hidden">
-    <div class="page-head"><div><h1>Data Pegawai</h1><p>Kelola kategori, jabatan, dan jadwal pegawai.</p></div><div class="actions"><button class="btn btn-primary" onclick="openEmployeeModal()">+ Tambah Pegawai</button></div></div>
+    <div class="page-head"><div><h1>Data Pegawai</h1><p>Ubah kategori dan jabatan tanpa mengubah data penilaian yang sudah tersimpan.</p></div><div class="actions"><button class="btn btn-primary" onclick="openEmployeeModal()">+ Tambah Pegawai</button></div></div>
     <div class="card section">
-      <div class="filters"><div class="filter-item"><input id="empSearch" class="input" placeholder="Cari nama atau ID..." oninput="debouncedRenderEmployees_()"></div><div style="min-width:150px"><select id="empCat" class="select" onchange="renderEmployees()"><option value="">Semua kategori</option><option>Guru</option><option>Tendik</option><option>Struktural</option></select></div><button class="btn" onclick="loadEmployees()">↻</button></div>
+      <div class="filters"><div class="filter-item"><input id="empSearch" class="input" placeholder="Cari nama atau ID..." oninput="renderEmployees()"></div><div style="min-width:150px"><select id="empCat" class="select" onchange="renderEmployees()"><option value="">Semua kategori</option><option>Guru</option><option>Tendik</option><option>Struktural</option></select></div><button class="btn" onclick="loadEmployees()">↻</button></div>
       <div class="table-wrap"><table class="table"><thead><tr><th>ID</th><th>Pegawai</th><th>Kategori</th><th>Jabatan</th><th>Walikelas</th><th>Akses</th><th>Aksi</th></tr></thead><tbody id="empBody"></tbody></table></div>
     </div>
   </section>
 
   <section id="view-kategori" class="view hidden">
-    <div class="page-head"><div><h1>Kategori Penilaian</h1><p>Atur PK yang berlaku untuk setiap kategori.</p></div><button class="btn btn-primary" onclick="openCategoryModal()">+ Tambah Kategori</button></div>
+    <div class="page-head"><div><h1>Kategori Penilaian</h1><p>Admin dapat membuat kategori sendiri dan menentukan PK mana yang benar-benar dinilai. Perhitungan laporan mengikuti konfigurasi ini.</p></div><button class="btn btn-primary" onclick="openCategoryModal()">+ Tambah Kategori</button></div>
     
     <div id="categoryConfigGrid" class="category-config-grid"></div>
   </section>
@@ -136,38 +114,38 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
   </section>
 
   <section id="view-jadwal" class="view hidden">
-    <div class="page-head"><div><h1>Jadwal & Penugasan</h1><p>Atur pola hari kerja dan penugasan.</p></div></div>
+    <div class="page-head"><div><h1>Jadwal & Penugasan</h1><p>Atur kewajiban kehadiran tanpa menganggap Sabtu atau Minggu sebagai hari khusus.</p></div></div>
     <div class="grid" style="grid-template-columns:1.05fr 1fr">
       <div class="card section">
-        <div class="section-head"><div><h3>Jadwal Dasar</h3><span class="muted">Pola mingguan pegawai.</span></div><button class="btn btn-primary" onclick="openScheduleModal()">+ Jadwal</button></div>
+        <div class="section-head"><div><h3>Jadwal Dasar</h3><span class="muted">Pola mingguan yang berlaku berulang untuk pegawai.</span></div><button class="btn btn-primary" onclick="openScheduleModal()">+ Jadwal</button></div>
         <div id="scheduleList" class="schedule-list"></div>
       </div>
       <div class="card section">
-        <div class="section-head"><div><h3>Penugasan / Perubahan</h3><span class="muted">Tambah atau batalkan kewajiban tanggal tertentu.</span></div><button class="btn btn-primary" onclick="openAssignmentModal()">+ Penugasan</button></div>
+        <div class="section-head"><div><h3>Penugasan / Perubahan</h3><span class="muted">Tambah atau batalkan kewajiban pada tanggal tertentu.</span></div><button class="btn btn-primary" onclick="openAssignmentModal()">+ Penugasan</button></div>
         <div class="filters"><div class="filter-item"><input id="assignmentSearch" class="input" type="date" onchange="loadAssignments()"></div><div class="filter-item"><select id="assignmentEmployee" class="select" onchange="loadAssignments()"><option value="">Semua pegawai</option></select></div></div>
         <div id="assignmentList" class="assignment-list"></div>
       </div>
     </div>
     <div class="card section" style="margin-top:16px">
-      <div class="section-head"><div><h3>Ringkasan Logika</h3><span class="muted">Kewajiban aktual berdasarkan jadwal dan penugasan.</span></div></div>
+      <div class="section-head"><div><h3>Ringkasan Logika</h3><span class="muted">Kewajiban aktual = Jadwal Dasar + Penugasan Tambah − Pembatalan.</span></div></div>
       <div class="schedule-flow"><span>Jadwal Dasar</span><b>+</b><span>Penugasan Tambah</span><b>−</b><span>Pembatalan</span><b>→</b><strong>Kewajiban Aktual</strong><b>→</b><span>Presensi</span><b>→</b><strong>Nilai PK1</strong></div>
     </div>
   </section>
 
   <section id="view-pk" class="view hidden">
-    <div class="page-head"><div><h1>Input Kinerja</h1><p>Input penilaian sesuai PK yang berlaku.</p></div></div>
+    <div class="page-head"><div><h1>Input Kinerja</h1><p>Rekap cepat berdasarkan indikator yang berlaku untuk profil pegawai.</p></div></div>
     <div class="switch" style="width:max-content;margin-bottom:14px">
       <button id="pkTab1" class="active" onclick="switchPK(1)">PK1 · Presensi</button><button id="pkTab2" onclick="switchPK(2)">PK2 · Kegiatan</button><button id="pkTab3" onclick="switchPK(3)">PK3 · Piket</button><button id="pkTab4" onclick="switchPK(4)">PK4 · Pembiasaan</button>
     </div>
 
     <div id="pk1Panel" class="card section">
-      <div class="section-head"><div><h3>PK1 · Presensi Kehadiran</h3><span class="muted">Hanya tanggal wajib yang dinilai.</span></div><div class="actions"><button class="btn btn-ghost" onclick="setAllPK1Hadir()">✓ Semua Hadir</button><button class="btn btn-primary" onclick="savePK1()">Simpan Presensi</button></div></div>
+      <div class="section-head"><div><h3>PK1 · Presensi Kehadiran</h3><span class="muted">Hanya tanggal yang memiliki kewajiban aktual yang masuk penilaian.</span></div><div class="actions"><button class="btn btn-ghost" type="button" onclick="setAllPK1Hadir()">✓ Hadir Semua</button><button class="btn btn-primary" onclick="savePK1()">Simpan Presensi</button></div></div>
       <div class="period-nav"><div class="form-field"><label>Mulai</label><input id="pk1Start" type="date" class="input" onchange="renderPK1()"></div><div class="period-arrow">→</div><div class="form-field"><label>Sampai</label><input id="pk1End" type="date" class="input" onchange="renderPK1()"></div><button class="btn" onclick="setPK1PeriodToday()">Hari Ini</button><button class="btn" onclick="setPK1PeriodWeek()">7 Hari</button></div>
-      <div class="pk1-info"><div><b id="pk1ObligationInfo">—</b><span> kewajiban aktual pada periode</span></div><div class="legend"><span><i class="dot-green"></i>Wajib</span><span><i class="dot-gray"></i>Tidak dijadwalkan</span><span><i class="dot-blue"></i>Hari ini</span></div></div>
+      <div class="pk1-info"><div><b id="pk1ObligationInfo">—</b><span> kewajiban aktual pada periode · default input Hadir</span></div><div class="legend"><span><i class="dot-green"></i>Wajib</span><span><i class="dot-gray"></i>Tidak dijadwalkan</span><span><i class="dot-blue"></i>Hari ini</span></div></div>
       <div class="pk1-category-picker">
   <div class="pk1-category-label">
     <div class="pk1-category-title">Kategori yang Diisi</div>
-    <div class="pk1-category-sub">Filter kategori pegawai.</div>
+    <div class="pk1-category-sub">Pilih satu kategori untuk menampilkan pegawai yang akan diisi presensinya.</div>
   </div>
   <div class="pk1-category-select-wrap">
     <select id="pk1CategorySelect" class="select pk1-category-select" onchange="setPK1CatSelect(this.value)">
@@ -176,21 +154,21 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
   </div>
   <div id="pk1CategorySummary" class="pk1-category-summary">Semua kategori</div>
 </div>
-<div class="filters pk1-search-row"><div class="filter-item"><input id="pk1Search" class="input" placeholder="Cari nama pegawai..." oninput="debouncedRenderPK1_()"></div></div>
+<div class="filters pk1-search-row"><div class="filter-item"><input id="pk1Search" class="input" placeholder="Cari nama pegawai..." oninput="renderPK1()"></div></div>
       <div class="table-wrap"><table class="table attendance-table"><thead id="pk1Head"></thead><tbody id="pk1Body"></tbody></table></div>
     </div>
 
     <div id="pk2Panel" class="hidden">
-      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tandai undangan dan kehadiran.</span></div><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div>
-        <div class="form-grid" style="margin-bottom:15px"><div class="form-field"><label>Jenis Kegiatan</label><select id="pk2Jenis" class="select"><option>Rapat</option><option>Upacara</option><option>Workshop</option><option>Kegiatan Sekolah</option><option>Lainnya</option></select></div><div class="form-field"><label>Tanggal</label><input id="pk2Tanggal" type="date" class="input" onchange="renderPK2()"></div><div class="form-field full"><label>Nama Kegiatan</label><input id="pk2Nama" class="input" placeholder="Contoh: Rapat Evaluasi Bulanan" onchange="renderPK2()"></div></div>
-        <div class="filters"><div class="filter-item"><input id="pk2Search" class="input" placeholder="Cari pegawai..." oninput="debouncedRenderPK2_()"></div></div>
+      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tentukan siapa yang diundang, lalu tandai hadir. Tampilan dibuat dua langkah agar mudah.</span></div><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div>
+        <div class="form-grid" style="margin-bottom:15px"><div class="form-field"><label>Jenis Kegiatan</label><select id="pk2Jenis" class="select"><option>Rapat</option><option>Upacara</option><option>Workshop</option><option>Kegiatan Sekolah</option><option>Lainnya</option></select></div><div class="form-field"><label>Tanggal</label><input id="pk2Tanggal" type="date" class="input"></div><div class="form-field full"><label>Nama Kegiatan</label><input id="pk2Nama" class="input" placeholder="Contoh: Rapat Evaluasi Bulanan"></div></div>
+        <div class="filters"><div class="filter-item"><input id="pk2Search" class="input" placeholder="Cari pegawai..." oninput="renderPK2()"></div></div>
         <div class="table-wrap"><table class="table"><thead><tr><th>Pegawai</th><th>Kategori/Jabatan</th><th style="text-align:center">Diundang</th><th style="text-align:center">Hadir</th></tr></thead><tbody id="pk2Body"></tbody></table></div>
       </div>
     </div>
 
     <div id="pk3Panel" class="hidden">
       <div class="card section">
-        <div class="section-head"><div><h3>PK3 · Piket</h3><span class="muted">Isi status piket per tanggal.</span></div><button class="btn btn-primary" onclick="savePK3()">Simpan PK3</button></div>
+        <div class="section-head"><div><h3>PK3 · Piket</h3><span class="muted">Pengisian berdasarkan rentang tanggal. Status dipilih melalui dropdown seperti PK1.</span></div><button class="btn btn-primary" onclick="savePK3()">Simpan PK3</button></div>
         <div class="period-nav">
           <div class="form-field"><label>Mulai</label><input id="pk3Start" type="date" class="input" onchange="applyPK3Range()"></div>
           <div class="period-arrow">→</div>
@@ -199,8 +177,8 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
           <button class="btn" onclick="setPK3PreviousWeek()">← 1 Minggu</button>
           <button class="btn" onclick="setPK3NextWeek()">1 Minggu →</button>
         </div>
-        <div class="pk4-range-caption"><strong id="pk3WeekLabel">Rentang</strong><span>Maksimal 31 hari per tampilan.</span></div>
-        <div class="filters" style="margin-bottom:12px"><div class="filter-item"><input id="pk3Search" class="input" placeholder="Cari pegawai..." oninput="debouncedRenderPK3_()"></div></div>
+        <div class="pk4-range-caption"><strong id="pk3WeekLabel">Rentang</strong><span>Pilih tanggal mulai dan selesai. Maksimal 31 hari per tampilan.</span></div>
+        <div class="filters" style="margin-bottom:12px"><div class="filter-item"><input id="pk3Search" class="input" placeholder="Cari pegawai..." oninput="renderPK3()"></div></div>
         <div class="table-wrap"><table class="table attendance-table"><thead id="pk3Head"></thead><tbody id="pk3Body"></tbody></table></div>
       </div>
     </div>
@@ -208,7 +186,7 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
     <div id="pk4Panel" class="hidden">
       <div class="card section">
         <div class="section-head">
-          <div><h3>PK4 · Pembiasaan</h3><span class="muted">Isi pembiasaan sesuai jadwal pegawai.</span></div>
+          <div><h3>PK4 · Pembiasaan</h3><span class="muted">Pengisian mingguan mengikuti jadwal pembiasaan sekolah. Hanya kategori yang memiliki PK4 yang ditampilkan.</span></div>
           <button class="btn btn-primary" onclick="savePK4()">Simpan PK4</button>
         </div>
         <div class="pk4-range-bar">
@@ -219,10 +197,10 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
           <button class="btn" onclick="setPK4PreviousWeek()">← 1 Minggu</button>
           <button class="btn" onclick="setPK4NextWeek()">1 Minggu →</button>
         </div>
-        <div class="pk4-range-caption"><strong id="pk4WeekLabel">Rentang</strong><span> Pilih rentang tanggal.</span></div>
+        <div class="pk4-range-caption"><strong id="pk4WeekLabel">Rentang</strong><span> Pilih tanggal mulai dan selesai. Tidak perlu mencari minggu satu per satu.</span></div>
         <input id="pk4WeekStart" type="hidden">
         <div class="filters" style="margin-bottom:12px">
-          <div class="filter-item"><input id="pk4Search" class="input" placeholder="Cari pegawai..." oninput="debouncedRenderPK4_()"></div>
+          <div class="filter-item"><input id="pk4Search" class="input" placeholder="Cari pegawai..." oninput="renderPK4()"></div>
         </div>
         <div class="pk4-schedule-note"><span class="pk4-note-dot"></span><b>Jadwal mengikuti Jadwal Dasar masing-masing pegawai.</b> Pilih rentang tanggal yang ingin diisi; kolom hanya muncul pada tanggal yang memiliki kewajiban PK4.</div>
         <div class="table-wrap"><table class="table attendance-table"><thead id="pk4Head"></thead><tbody id="pk4Body"></tbody></table></div>
@@ -233,14 +211,14 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
   </section>
 
   <section id="view-grafik" class="view hidden">
-    <div class="page-head"><div><h1>Grafik Kinerja Pegawai</h1><p>Pantau capaian per pegawai.</p></div></div>
+    <div class="page-head"><div><h1>Grafik Kinerja Pegawai</h1><p>Pantau indikator yang berlaku berdasarkan kategori pegawai.</p></div></div>
     <div class="card section"><div class="filters"><div class="filter-item"><select id="chartEmployee" class="select" onchange="loadChart()"></select></div></div><canvas id="performanceChart" height="100"></canvas></div>
   </section>
 
   <section id="view-laporan" class="view hidden">
-    <div class="page-head"><div><h1>Laporan Kinerja F4</h1><p>Pilih pegawai dan periode untuk menampilkan laporan.</p></div><div class="actions"><button class="btn" onclick="downloadReportPDF()">⬇ PDF Laporan F4</button></div></div>
+    <div class="page-head"><div><h1>Laporan Kinerja F4</h1><p>Ukuran 21,6 × 33 cm. Pilih kategori dan pegawai, lalu tampilkan laporan.</p></div><div class="actions"><button class="btn" onclick="downloadReportPDF()">⬇ PDF Laporan F4</button></div></div>
     <div class="card section">
-      <div class="report-filter-head"><div><h3 style="margin:0">Filter Laporan</h3><span class="muted">Filter kategori dan pegawai.</span></div></div>
+      <div class="report-filter-head"><div><h3 style="margin:0">Filter Laporan</h3><span class="muted">Laporan dapat ditampilkan untuk Guru, Tendik, Struktural, atau semua pegawai.</span></div></div>
       <div class="report-controls report-controls-v2">
         <div class="form-field"><label>Kategori Pegawai</label><select id="reportCategory" class="select" onchange="populateReportEmployees()"><option value="SEMUA">Semua Kategori</option></select></div>
         <div class="form-field"><label>Nama Pegawai</label><select id="reportEmployee" class="select" onchange="updateReportSelectionNote_()"><option value="SEMUA">Semua Pegawai</option></select></div>
@@ -254,7 +232,7 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
   </section>
 
   <section id="view-rekap" class="view hidden">
-    <div class="page-head"><div><h1>Rekap Kepegawaian</h1><p>Ringkasan hasil penilaian.</p></div><div class="actions"><button class="btn" onclick="downloadRekapPDF()">⬇ PDF Rekap</button><button class="btn btn-primary" onclick="exportRekapExcel()">⇩ Excel Rekap</button></div></div>
+    <div class="page-head"><div><h1>Rekap Kepegawaian</h1><p>Ringkasan seluruh hasil penilaian berdasarkan kategori dan urutan jabatan.</p></div><div class="actions"><button class="btn" onclick="downloadRekapPDF()">⬇ PDF Rekap</button><button class="btn btn-primary" onclick="exportRekapExcel()">⇩ Excel Rekap</button></div></div>
     <div class="card section">
       <div class="rekap-toolbar">
         <div class="form-field"><label>Jenis Rekap</label><select id="rekapType" class="select" onchange="updateRekapHint()"><option value="NILAI">Rekap Nilai PK</option><option value="PRESENSI">Rekap Presensi PK1</option></select></div>
@@ -263,18 +241,18 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
         <div class="form-field"><label>Sampai</label><input id="rekapEnd" type="date" class="input"></div>
         <button class="btn btn-primary" onclick="showRekap()">▣ Tampilkan</button>
       </div>
-      <div id="rekapHint" class="muted" style="margin-top:10px">Menampilkan PK yang berlaku pada kategori.</div>
+      <div id="rekapHint" class="muted" style="margin-top:10px">Rekap nilai menampilkan PK sesuai kategori yang dikonfigurasi Admin.</div>
     </div>
     <div id="rekapArea" class="rekap-area"><div class="empty">Pilih jenis rekap dan periode, lalu klik Tampilkan.</div></div>
   </section>
 
   <section id="view-export" class="view hidden">
-    <div class="page-head"><div><h1>Export Data</h1><p>Unduh data kinerja.</p></div></div>
+    <div class="page-head"><div><h1>Export Data</h1><p>Unduh rekap kinerja berdasarkan periode.</p></div></div>
     <div class="card section"><div class="form-grid"><div class="form-field"><label>Dari</label><input id="exportStart" type="date" class="input"></div><div class="form-field"><label>Sampai</label><input id="exportEnd" type="date" class="input"></div></div><div class="actions" style="margin-top:15px"><button class="btn btn-primary" onclick="exportExcel()">Export XLSX</button></div></div>
   </section>
 
   <section id="view-users" class="view hidden">
-    <div class="page-head"><div><h1>Manajemen User</h1><p>Kelola akun dan hak akses.</p></div><button class="btn btn-primary" onclick="openUserModal()">+ Tambah User</button></div>
+    <div class="page-head"><div><h1>Manajemen User</h1><p>Kelola akun login dan role akses.</p></div><button class="btn btn-primary" onclick="openUserModal()">+ Tambah User</button></div>
     <div class="card section"><div class="table-wrap"><table class="table"><thead><tr><th>Username</th><th>Role</th><th>ID Pegawai</th><th>Aksi</th></tr></thead><tbody id="userBody"></tbody></table></div></div>
   </section>
   </div>
@@ -284,10 +262,6 @@ input[type="checkbox"]{accent-color:#10a36b;width:17px;height:17px;cursor:pointe
 
 <div id="modal" class="modal hidden"><div class="modal-box"><div class="modal-head"><h3 id="modalTitle">Form</h3><button class="btn" onclick="closeModal()">✕</button></div><div id="modalBody" class="modal-body"></div><div id="modalFoot" class="modal-foot"></div></div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js?v=20261007-06"></script>
-<script src="siska-api.js?v=20261007-06"></script>
-
 <script>
 let token='',role='Superadmin',userName='',employees=[],jobs=[],categories=[],schedules=[],historyPage=1,historyLimit=8,activePK=1,weekStart=getMonday(new Date()),pk1Cat='',chart=null,categoryChart=null;
 let masterState={employees:false,categories:false,jobs:false,schedules:false};
@@ -296,19 +270,13 @@ const logo='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAABwCAYAAADVN7S/AA
 const pkNames={1:'PK1 · Presensi',2:'PK2 · Kegiatan',3:'PK3 · Piket',4:'PK4 · Pembiasaan'};
 const indicators={Guru:['PK1','PK2'],Tendik:['PK1','PK2','PK3'],Struktural:['PK1','PK2','PK3','PK4']};
 const $=id=>document.getElementById(id);
-const debounce_=(fn,wait=160)=>{let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),wait)}};
-const debouncedRenderEmployees_=debounce_(()=>renderEmployees());
-const debouncedRenderPK1_=debounce_(()=>renderPK1());
-const debouncedRenderPK2_=debounce_(()=>renderPK2());
-const debouncedRenderPK3_=debounce_(()=>renderPK3());
-const debouncedRenderPK4_=debounce_(()=>renderPK4());
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 function todayISO(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'})}
 function fmtDate(s){if(!s)return '-';let d=new Date(s+'T00:00:00');return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
 function getMonday(d){d=new Date(d);d.setHours(0,0,0,0);let day=d.getDay();let diff=day===0?-6:1-day;d.setDate(d.getDate()+diff);return d}
 function iso(d){return d.toLocaleDateString('en-CA')}
 function addDays(d,n){let x=new Date(d);x.setDate(x.getDate()+n);return x}
-function setLoading(on,text=''){ const el=$('loading'); if(!el)return; $('loadingText').innerText='mengambil data'; clearTimeout(window._loadingTimer); if(on){window._loadingTimer=setTimeout(()=>el.classList.remove('hidden'),160)}else el.classList.add('hidden')}
+function setLoading(on,text=''){ $('loadingText').innerText='mengambil data'; $('loading').classList.toggle('hidden',!on)}
 function toast(msg,type='info'){let t=$('toast');t.textContent=msg;t.className='toast '+type;t.classList.remove('hidden');clearTimeout(window._toast);window._toast=setTimeout(()=>t.classList.add('hidden'),3000)}
 function saveSession_(){
   if(token && token!=='demo'){
@@ -325,127 +293,60 @@ function handleSessionExpired_(){
   if($('loginPass'))$('loginPass').value='';
   toast('Sesi berakhir. Silakan login kembali.','error');
 }
-function callServer(fn,args,cb){
-  if(window.SISKA_API && typeof window.SISKA_API[fn]==='function'){
-    Promise.resolve().then(()=>window.SISKA_API[fn](...(args||[]))).then(result=>{
-      if(result?.status==='expired')return handleSessionExpired_();
-      cb?.(result);
-    }).catch(e=>{
-      setLoading(false);
-      const msg=String(e?.message||e||'');
-      if(/sesi|session|auth|jwt|token/i.test(msg))handleSessionExpired_();
-      else {console.error('[SISKA]',fn,e);toast(msg,'error');}
-    });
-    return;
-  }
-  if(window.google?.script?.run){
-    let r=google.script.run.withSuccessHandler(cb).withFailureHandler(e=>{
-      setLoading(false);
-      const msg=String(e?.message||e||'');
-      if(/token tidak valid|sesi telah berakhir|sesi tidak ditemukan/i.test(msg))handleSessionExpired_();
-      else toast('Server error: '+msg,'error');
-    });
-    r[fn].apply(r,[...(args||[]),token]);
-    return;
-  }
-  demoCall(fn,args,cb);
-}
-function callServerAsync_(fn,args=[]){
-  return new Promise((resolve,reject)=>{
-    if(window.SISKA_API && typeof window.SISKA_API[fn]==='function'){
-      window.SISKA_API[fn](...(args||[])).then(resolve).catch(reject);
-      return;
-    }
-    callServer(fn,args,resolve);
-  });
-}
-function demoCall(fn,args,cb){
- const d=demoEmployees(); if(fn==='getSemuaPegawai')return cb(d);
- if(fn==='getMasterJabatan')return cb(demoJobs());
- if(fn==='getMasterJadwalDasar')return cb([{id_jadwal:'JD-001',nama_jadwal:'Hari Kerja',senin:true,selasa:true,rabu:true,kamis:true,jumat:true,sabtu:false,minggu:false,status_aktif:true,jumlah_pegawai:d.length}]);
- if(fn==='getPenugasanPK1')return cb([]);
- if(fn==='getPK1Periode')return cb({obligations:{},presensi:{}});
- if(fn==='getMasterKategoriPenilaian')return cb([{id_kategori:'KAT-001',nama_kategori:'Guru',pk1:true,pk2:true,pk3:false,pk4:false,urutan:1,status_aktif:true},{id_kategori:'KAT-002',nama_kategori:'Tendik',pk1:true,pk2:true,pk3:true,pk4:false,urutan:2,status_aktif:true},{id_kategori:'KAT-003',nama_kategori:'Struktural',pk1:true,pk2:true,pk3:true,pk4:true,urutan:3,status_aktif:true}]);
- if(fn==='getRekapKepegawaianV2')return cb({jenis:args[2]||'NILAI',periode:{start:args[0]||'',end:args[1]||''},groups:{Guru:d.map((p,i)=>({No:i+1,ID:p.id_pegawai,Nama:p.nama_pegawai,Kategori:p.kategori,Jabatan:p.jabatan,PK1:96,PK2:92,PK3:'-',PK4:'-','Nilai Akhir':94,Predikat:'SANGAT BAIK'}))},categories:[{nama_kategori:'Guru',urutan:1}]});
- if(fn==='getDashboardStats')return cb({jmlGuru:45,jmlTendik:12,jmlStruktural:8,total:65,avgPK1:94,avgPK2:91,avgPK3:89,avgPK4:93,recent:demoRecent(),rules:indicators});
- if(fn==='getRiwayatPKAgregasi')return cb({data:[{tanggal:todayISO(),kegiatan:activePK===1?'Presensi Mingguan':'Kegiatan Sekolah',total_pegawai:65,hadir:60},{tanggal:'2026-09-30',kegiatan:'Rapat Guru',total_pegawai:65,hadir:58}],total:2});
- if(fn==='getStatistikGrafik')return cb({pk1:96,pk2:92,pk3:90,pk4:88,rerata:92,indikator:indicators[d[0].kategori]});
- if(fn==='getDataLaporanCetak')return cb(d.map(p=>({info:p,statistik:{pk1:96,pk2:92,pk3:90,pk4:88},rerata:92,grade:'SANGAT BAIK',log_kegiatan:[],indikator:indicators[p.kategori]})));
- if(fn==='getAllUsers')return cb([{username:'superadmin',role:'Superadmin',id_pegawai:'-'}]);
- cb({status:'success',message:'Demo OK'});
-}
-function demoEmployees(){return [{id_pegawai:'SMKG-001',nama_pegawai:'Budi Santoso, S.Pd',kategori:'Guru',jabatan:'Guru Mata Pelajaran',is_walikelas:'XII DKV 1',role:'Tidak Ada Akses'},{id_pegawai:'SMKG-002',nama_pegawai:'Siti Aminah, S.Kom',kategori:'Struktural',jabatan:'Wakasek Kurikulum',is_walikelas:'-',role:'Kurikulum'},{id_pegawai:'SMKG-003',nama_pegawai:'Asep Saepulloh',kategori:'Tendik',jabatan:'Operator Sekolah (OPS)',is_walikelas:'-',role:'Kepegawaian'}]}
-function demoJobs(){return [{id_jabatan:'STR-001',kategori:'Struktural',nama_jabatan:'Kepala Sekolah',status_aktif:true,urutan:1},{id_jabatan:'STR-002',kategori:'Struktural',nama_jabatan:'Wakasek Kurikulum',status_aktif:true,urutan:2},{id_jabatan:'STR-003',kategori:'Struktural',nama_jabatan:'Wakasek Kesiswaan',status_aktif:true,urutan:3},{id_jabatan:'STR-004',kategori:'Struktural',nama_jabatan:'Ketua KK DKV',status_aktif:true,urutan:4},{id_jabatan:'STR-005',kategori:'Struktural',nama_jabatan:'Ketua KK TSM',status_aktif:true,urutan:5},{id_jabatan:'STR-006',kategori:'Struktural',nama_jabatan:'Ketua KK MP',status_aktif:true,urutan:6},{id_jabatan:'STR-007',kategori:'Struktural',nama_jabatan:'Staf Kurikulum',status_aktif:true,urutan:7},{id_jabatan:'STR-008',kategori:'Struktural',nama_jabatan:'Staf Kesiswaan dan Ketua TEFA',status_aktif:true,urutan:8},{id_jabatan:'STR-009',kategori:'Struktural',nama_jabatan:'Ketua BKK dan Hubinmas',status_aktif:true,urutan:9},{id_jabatan:'STR-010',kategori:'Struktural',nama_jabatan:'Tim Teaching Factory',status_aktif:true,urutan:10},{id_jabatan:'STR-011',kategori:'Struktural',nama_jabatan:'Tim Teaching Factory/Guru Piket',status_aktif:true,urutan:11},{id_jabatan:'STR-012',kategori:'Struktural',nama_jabatan:'Guru BK',status_aktif:true,urutan:12},{id_jabatan:'TEN-001',kategori:'Tendik',nama_jabatan:'Ka. Tenaga Administrasi Sekolah',status_aktif:true,urutan:1},{id_jabatan:'TEN-002',kategori:'Tendik',nama_jabatan:'Bendahara Sekolah',status_aktif:true,urutan:2},{id_jabatan:'TEN-003',kategori:'Tendik',nama_jabatan:'Staff Tenaga Administrasi Sekolah',status_aktif:true,urutan:3},{id_jabatan:'TEN-004',kategori:'Tendik',nama_jabatan:'Operator Sekolah (OPS)',status_aktif:true,urutan:4},{id_jabatan:'TEN-005',kategori:'Tendik',nama_jabatan:'Teknisi Bengkel dan Maintenance',status_aktif:true,urutan:5},{id_jabatan:'TEN-006',kategori:'Tendik',nama_jabatan:'Tenaga Perpustakaan dan Staff BKK',status_aktif:true,urutan:6},{id_jabatan:'TEN-007',kategori:'Tendik',nama_jabatan:'Tenaga Kebersihan',status_aktif:true,urutan:7},{id_jabatan:'TEN-008',kategori:'Tendik',nama_jabatan:'Pembina Rohis',status_aktif:true,urutan:8},{id_jabatan:'TEN-009',kategori:'Tendik',nama_jabatan:'Tenaga Keamanan',status_aktif:true,urutan:9},{id_jabatan:'TEN-010',kategori:'Tendik',nama_jabatan:'Tim IT',status_aktif:true,urutan:10}]}
-function demoRecent(){return [{tanggal:todayISO(),kegiatan:'Presensi Mingguan',total:65,hadir:60},{tanggal:'2026-10-03',kegiatan:'Upacara Bendera',total:65,hadir:58},{tanggal:'2026-10-02',kegiatan:'Pembiasaan',total:65,hadir:61}]}
+
+// SISKA V2 production transport.
+// The real callServer() is supplied by ./siska-api.js.
+// There is intentionally NO Google Apps Script fallback and NO demo dataset.
+
 function login(e){
   e.preventDefault();
-  setLoading(true);
-  const u=$('loginUser').value.trim(),p=$('loginPass').value;
-  if(window.SISKA_API?.login){
-    window.SISKA_API.login(u,p).then(r=>{
-      setLoading(false);
-      if(r?.status==='success'){token=r.token||'';role=r.role||'Superadmin';userName=r.nama||r.username||u;saveSession_();enterApp();}
-      else toast(r?.message||'Login gagal.','error');
-    }).catch(err=>{setLoading(false);toast(err?.message||'Login gagal.','error')});
-    return;
-  }
-  if(window.google?.script?.run){
-    google.script.run.withSuccessHandler(r=>{
-      setLoading(false);
-      if(r.status==='success'){token=r.token;role=r.role;userName=r.nama;saveSession_();enterApp()}
-      else toast(r.message,'error');
-    }).withFailureHandler(x=>{setLoading(false);toast(x.message,'error')}).prosesLogin(u,p);
-    return;
-  }
-  setLoading(false);token='demo';role='Superadmin';userName='Super Administrator';enterApp();
+  setLoading(true,'Masuk...');
+  const username=$('loginUser')?.value.trim()||'';
+  const password=$('loginPass')?.value||'';
+
+  callServer('prosesLogin',[username,password],r=>{
+    setLoading(false);
+    if(r?.status==='success'){
+      token=r.token||'';
+      role=r.role||'';
+      userName=r.nama||r.username||'';
+      saveSession_();
+      enterApp();
+    }else{
+      toast(r?.message||'Login gagal.','error');
+    }
+  });
 }
 
 function restoreSession_(){
-  if(window.SISKA_API?.getSessionInfo){
-    window.SISKA_API.getSessionInfo().then(r=>{
-      if(r?.status==='success'){role=r.role||'Superadmin';userName=r.username||r.nama||'';enterApp();}
-    }).catch(()=>{});
-    return;
-  }
-  if(!window.google?.script?.run)return;
-  let saved=null;try{saved=JSON.parse(sessionStorage.getItem('SISKA_SESSION')||'null')}catch(e){}
-  if(!saved?.token)return;
-  token=saved.token;role=saved.role||'Superadmin';userName=saved.userName||'';
-  google.script.run.withSuccessHandler(r=>{
-    if(r&&r.status==='success'){role=r.role||role;userName=r.username||userName;saveSession_();enterApp()}
-    else clearSession_();
-  }).withFailureHandler(()=>clearSession_()).getSessionInfo(token);
+  // Supabase Auth owns the persisted session.
+  // We only ask the API whether the current Auth session is still valid.
+  callServer('getSessionInfo',[],r=>{
+    if(r?.status==='success'){
+      token='';
+      role=r.role||'';
+      userName=r.nama||r.username||'';
+      enterApp();
+    }else{
+      clearSession_();
+      $('app').classList.add('hidden');
+      $('loginView').classList.remove('hidden');
+    }
+  });
 }
 
-async function enterApp(){
-  $('loginView').classList.add('hidden');$('app').classList.remove('hidden');
-  $('roleBadge').textContent='Role: '+role;$('topUser').textContent=userName||role;saveSession_();
-  setLoading(true);
-  try{
-    if(window.SISKA_API){
-      const [cats,emps,jobsData,scheds,dash]=await Promise.all([
-        callServerAsync_('getMasterKategoriPenilaian'),
-        callServerAsync_('getSemuaPegawai'),
-        callServerAsync_('getMasterJabatan'),
-        callServerAsync_('getMasterJadwalDasar'),
-        callServerAsync_('getDashboardStats')
-      ]);
-      categories=cats||[];employees=emps||[];jobs=jobsData||[];schedules=scheds||[];
-      masterState={employees:true,categories:true,jobs:true,schedules:true};
-      populateCategorySelectors_();renderPK1CategoryFilter_();renderCategoryConfig_();renderEmployees();renderJobs();renderSchedules();refreshEmployeeScheduleOptions_();populatePKTables();populateChartEmployees();populateReportEmployees();
-      dashboardClientCache_={at:Date.now(),data:dash};
-      renderDashboardCategoryCards_(dash);renderDashboardKPIs_(dash);renderCategoryChart(dash);renderRecent(dash?.recent||[]);renderRules(dash?.rules||{});
-    }else{
-      loadCategories(()=>loadEmployees(()=>loadJobs(()=>loadSchedules(()=>loadDashboard(true)))));
-    }
-  }catch(e){console.error(e);toast(e?.message||'Gagal memuat data.','error')}
-  finally{setLoading(false)}
-}
 function logout(){
-  const oldToken=token;clearSession_();
-  if(window.SISKA_API?.logout){window.SISKA_API.logout().finally(()=>location.reload());return}
-  if(window.google?.script?.run){google.script.run.withSuccessHandler(()=>location.reload()).withFailureHandler(()=>location.reload()).logout(oldToken)}else location.reload();
+  setLoading(true,'Keluar...');
+  callServer('logout',[],r=>{
+    setLoading(false);
+    clearSession_();
+    $('app').classList.add('hidden');
+    $('loginView').classList.remove('hidden');
+    if($('loginPass'))$('loginPass').value='';
+    toast(r?.message||'Logout berhasil.','success');
+  });
 }
+
 function toggleSidebar(){$('sidebar').classList.toggle('open')}
 function showView(v){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$('view-'+v).classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$('topTitle').textContent={dashboard:'Dashboard',pegawai:'Data Pegawai',kategori:'Kategori Penilaian',jabatan:'Master Jabatan',jadwal:'Jadwal & Penugasan',pk:'Input Kinerja',grafik:'Grafik Kinerja',laporan:'Laporan F4',rekap:'Rekap Kepegawaian',export:'Export Data',users:'Manajemen User'}[v]||'SISKA';if(window.innerWidth<760)$('sidebar').classList.remove('open');if(v==='dashboard')loadDashboard();if(v==='pegawai'){renderEmployees();refreshEmployeeScheduleOptions_();}if(v==='kategori')renderCategoryConfig_();if(v==='jabatan')renderJobs();if(v==='jadwal'){renderSchedules();refreshEmployeeScheduleOptions_();loadAssignments();}if(v==='pk'){if(!employees.length)return;switchPK(activePK)}if(v==='grafik'){populateChartEmployees()}if(v==='laporan'){populateReportEmployees()}if(v==='rekap'){updateRekapCategoryOptions_()}if(v==='users')loadUsers()}
 function renderCategoryChart(d){if(categoryChart)categoryChart.destroy();const cats=d.categories||[];categoryChart=new Chart($('categoryChart'),{type:'doughnut',data:{labels:cats.map(c=>c.nama_kategori),datasets:[{data:cats.map(c=>Number(d.categoryCounts?.[c.nama_kategori]||0)),backgroundColor:cats.map((_,i)=>['#1769e0','#10a36b','#7957d5','#e09a17','#d04b7b','#4c8dca'][i%6]),borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},cutout:'68%'}})}
@@ -578,31 +479,92 @@ function setPK1PeriodToday(){const t=todayISO();$('pk1Start').value=t;$('pk1End'
 function setPK1PeriodWeek(){const e=new Date();const s=new Date(e);s.setDate(s.getDate()-6);$('pk1Start').value=iso(s);$('pk1End').value=iso(e);renderPK1()}
 function initPK1Period_(){if(!$('pk1Start'))return;if(!$('pk1Start').value||!$('pk1End').value)setPK1PeriodWeek()}
 function getPK1PeriodData_(startDate,endDate,cb,force=false){const key=startDate+'|'+endDate;if(!force&&pk1PeriodCache.key===key&&pk1PeriodCache.data){cb(pk1PeriodCache.data);return}if(pk1PeriodCache.loading&&pk1PeriodCache.key===key){pk1PeriodCache.queue.push(cb);return}pk1PeriodCache={key:key,data:null,loading:true,queue:[cb]};callServer('getPK1Periode',[startDate,endDate],data=>{pk1PeriodCache.data=data||{obligations:{},presensi:{}};pk1PeriodCache.loading=false;const q=pk1PeriodCache.queue.splice(0);q.forEach(fn=>fn(pk1PeriodCache.data))})}
-function renderPK1(){initPK1Period_();const days=pk1Dates_(),today=todayISO();if(!days.length){$('pk1Body').innerHTML='<tr><td colspan="20" class="empty">Periode tidak valid. Pilih tanggal mulai dan selesai.</td></tr>';return}if(days.length>31){toast('Maksimal 31 hari per tampilan.','error');return}$('pk1Head').innerHTML='<tr><th>Pegawai</th>'+days.map(d=>`<th>${d.toLocaleDateString('id-ID',{weekday:'short'})}<br>${d.getDate()}</th>`).join('')+'<th>Ringkas</th></tr>';let q=($('pk1Search')?.value||'').toLowerCase();let arr=sortEmployeesByCategory(employees.filter(p=>(!pk1Cat||p.kategori===pk1Cat)&&(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));const a=$('pk1Start').value,b=$('pk1End').value;setLoading(true);getPK1PeriodData_(a,b,data=>{setLoading(false);const obligations=data?.obligations||{};const existing=data?.presensi||{};let totalOb=0,html='',lastCat='';arr.forEach(p=>{if(p.kategori!==lastCat){html+=categoryHeaderRow(p.kategori,days.length+2);lastCat=p.kategori}let present=0,ob=0;html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.kategori)} · ${esc(p.jabatan||'-')}</small></div></td>`;days.forEach(d=>{const s=iso(d),key=s+'|'+p.id_pegawai,info=obligations[key];const future=s>today;if(info&&!future){ob++;totalOb++;const st=existing[key]||'Hadir';if(st==='Hadir')present++;html+=`<td class="day-cell obligation-cell"><select class="status-select ${st==='Hadir'?'status-hadir':st==='Sakit'?'status-sakit':st==='Izin'?'status-izin':st==='Tanpa Keterangan'?'status-alpha':''} ${s===today?'today-ring':''}" data-pk1="${esc(p.id_pegawai)}" data-date="${s}" data-ob="1"><option value="" ${!st?'selected':''}>Belum diisi</option><option ${st==='Hadir'?'selected':''}>Hadir</option><option ${st==='Sakit'?'selected':''}>Sakit</option><option ${st==='Izin'?'selected':''}>Izin</option><option ${st==='Tanpa Keterangan'?'selected':''}>Tanpa Keterangan</option></select></td>`}else{html+=`<td class="day-cell"><span class="not-scheduled">${future?'Belum':'Tidak dijadwalkan'}</span></td>`}});html+=`<td><span class="badge ${ob?'guru':''}">${ob} wajib${ob?' · '+present+' hadir':''}</span></td></tr>`});$('pk1Body').innerHTML=html||`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai yang sesuai.</td></tr>`;$('pk1ObligationInfo').textContent=String(totalOb)})}
+function renderPK1(){initPK1Period_();const days=pk1Dates_(),today=todayISO();if(!days.length){$('pk1Body').innerHTML='<tr><td colspan="20" class="empty">Periode tidak valid. Pilih tanggal mulai dan selesai.</td></tr>';return}if(days.length>31){toast('Maksimal 31 hari per tampilan.','error');return}$('pk1Head').innerHTML='<tr><th>Pegawai</th>'+days.map(d=>`<th>${d.toLocaleDateString('id-ID',{weekday:'short'})}<br>${d.getDate()}</th>`).join('')+'<th>Ringkas</th></tr>';let q=($('pk1Search')?.value||'').toLowerCase();let arr=sortEmployeesByCategory(employees.filter(p=>(!pk1Cat||p.kategori===pk1Cat)&&(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));const a=$('pk1Start').value,b=$('pk1End').value;setLoading(true);getPK1PeriodData_(a,b,data=>{setLoading(false);const obligations=data?.obligations||{};const existing=data?.presensi||{};let totalOb=0,html='',lastCat='';arr.forEach(p=>{if(p.kategori!==lastCat){html+=categoryHeaderRow(p.kategori,days.length+2);lastCat=p.kategori}let present=0,ob=0;html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.kategori)} · ${esc(p.jabatan||'-')}</small></div></td>`;days.forEach(d=>{const s=iso(d),key=s+'|'+p.id_pegawai,info=obligations[key];const future=s>today;if(info&&!future){ob++;totalOb++;const st=existing[key]||'Hadir';if(st==='Hadir')present++;const cls=statusClassPK1_(st);html+=`<td class="day-cell obligation-cell"><select class="status-select ${cls} ${s===today?'today-ring':''}" data-pk1="${esc(p.id_pegawai)}" data-date="${s}" data-ob="1" onchange="changePK1Status_(this)"><option value="Hadir" ${st==='Hadir'?'selected':''}>Hadir</option><option value="Sakit" ${st==='Sakit'?'selected':''}>Sakit</option><option value="Izin" ${st==='Izin'?'selected':''}>Izin</option><option value="Tanpa Keterangan" ${st==='Tanpa Keterangan'?'selected':''}>Tanpa Keterangan</option></select></td>`}else{html+=`<td class="day-cell"><span class="not-scheduled">${future?'Belum':'Tidak dijadwalkan'}</span></td>`}});html+=`<td><span class="badge ${ob?'guru':''}">${ob} wajib${ob?' · '+present+' hadir':''}</span></td></tr>`});$('pk1Body').innerHTML=html||`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai yang sesuai.</td></tr>`;$('pk1ObligationInfo').textContent=String(totalOb)})}
+
+function statusClassPK1_(status){return status==='Hadir'?'status-hadir':status==='Sakit'?'status-sakit':status==='Izin'?'status-izin':status==='Tanpa Keterangan'?'status-alpha':''}
+function changePK1Status_(el){el.className='status-select '+statusClassPK1_(el.value)+(el.dataset.date===todayISO()?' today-ring':'')}
+function setAllPK1Hadir(){const els=document.querySelectorAll('#pk1Body select[data-pk1][data-ob="1"]');if(!els.length)return toast('Tidak ada kewajiban PK1 pada tampilan ini.','info');els.forEach(el=>{el.value='Hadir';changePK1Status_(el)});toast(els.length+' kewajiban PK1 diatur menjadi Hadir. Klik Simpan Presensi untuk menyimpan.','success')}
 function moveWeek(n){const s=new Date(($('pk1Start').value||todayISO())+'T00:00:00');s.setDate(s.getDate()+n);const e=new Date(($('pk1End').value||todayISO())+'T00:00:00');e.setDate(e.getDate()+n);$('pk1Start').value=iso(s);$('pk1End').value=iso(e);renderPK1()}
 function savePK1(){const rows=[];document.querySelectorAll('[data-pk1][data-ob="1"]').forEach(s=>{if(!s.value)return;const p=employees.find(x=>x.id_pegawai===s.dataset.pk1);if(p)rows.push({tanggal:s.dataset.date,id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,status:s.value})});if(!rows.length)return toast('Tidak ada kewajiban yang dapat disimpan.','error');setLoading(true);callServer('simpanBatchPK1Periode',[$('pk1Start').value,$('pk1End').value,rows],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success'){const key=$('pk1Start').value+'|'+$('pk1End').value;if(pk1PeriodCache.key===key&&pk1PeriodCache.data){pk1PeriodCache.data.presensi=pk1PeriodCache.data.presensi||{};rows.forEach(x=>{pk1PeriodCache.data.presensi[x.tanggal+'|'+x.id_pegawai]=x.status})}loadHistory();renderPK1()}})}
 function renderPK2(){
-  const date=$('pk2Tanggal')?.value||'';
-  const name=($('pk2Nama')?.value||'').trim();
   let q=($('pk2Search')?.value||'').toLowerCase();
   let arr=sortEmployeesByCategory(employees.filter(p=>!q||String(p.nama_pegawai||'').toLowerCase().includes(q)));
-  const draw=(existing)=>{
-    existing=existing||{};
-    let html='',lastCat='';
-    arr.forEach(p=>{
-      if(p.kategori!==lastCat){html+=categoryHeaderRow(p.kategori,4);lastCat=p.kategori;}
-      const rec=existing[p.id_pegawai]||null;
-      const invited=rec&&rec.diundang!==undefined?!!rec.diundang:true;
-      const hadir=rec&&rec.hadir!==undefined?!!rec.hadir:true;
-      html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.id_pegawai)}</small></div></td><td>${esc(p.jabatan||p.kategori)}</td><td style="text-align:center"><input type="checkbox" data-invite="${esc(p.id_pegawai)}" ${invited?'checked':''}></td><td style="text-align:center"><input type="checkbox" class="attend-check" data-attend="${esc(p.id_pegawai)}" ${hadir?'checked':''}></td></tr>`;
-    });
-    $('pk2Body').innerHTML=html||'<tr><td colspan="4" class="empty">Tidak ada pegawai yang sesuai.</td></tr>';
-  };
-  if(!date||!name){draw({});return;}
-  setLoading(true);
-  callServer('getPK2Periode',[date,name],data=>{setLoading(false);draw(data?.presensi||{});});
+  let html='',lastCat='';
+  arr.forEach(p=>{
+    if(p.kategori!==lastCat){html+=categoryHeaderRow(p.kategori,4);lastCat=p.kategori;}
+    html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.id_pegawai)}</small></div></td><td>${esc(p.jabatan||p.kategori)}</td><td style="text-align:center"><input type="checkbox" data-invite="${esc(p.id_pegawai)}" checked></td><td style="text-align:center"><input type="checkbox" data-attend="${esc(p.id_pegawai)}"></td></tr>`;
+  });
+  $('pk2Body').innerHTML=html||'<tr><td colspan="4" class="empty">Tidak ada pegawai yang sesuai.</td></tr>';
 }
-function savePK2(){let date=$('pk2Tanggal').value,name=$('pk2Nama').value.trim(),jenis=$('pk2Jenis').value;if(!date||!name)return toast('Tanggal dan nama kegiatan wajib diisi','error');if(date>todayISO())return toast('Tanggal kegiatan belum terjadi.','error');let rows=employees.map(p=>({id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,diundang:$(`[data-invite="${CSS.escape(p.id_pegawai)}"]`)?.checked||false,hadir:$(`[data-attend="${CSS.escape(p.id_pegawai)}"]`)?.checked||false}));setLoading(true);callServer('simpanBatchPK2V2',[date,jenis,name,rows],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success')loadHistory()})}
+function savePK2(){
+  const date=$('pk2Tanggal')?.value||'';
+  const name=($('pk2Nama')?.value||'').trim();
+  const jenis=$('pk2Jenis')?.value||'';
+
+  if(!date||!name)return toast('Tanggal dan nama kegiatan wajib diisi','error');
+  if(date>todayISO())return toast('Tanggal kegiatan belum terjadi.','error');
+
+  const rows=[];
+  let missing=0;
+  let invitedCount=0;
+  let hadirCount=0;
+
+  for(const p of employees){
+    const id=String(p.id_pegawai||'');
+    const inviteEl=document.querySelector(`[data-invite="${CSS.escape(id)}"]`);
+    const attendEl=document.querySelector(`[data-attend="${CSS.escape(id)}"]`);
+
+    if(!inviteEl||!attendEl){
+      missing++;
+      continue;
+    }
+
+    const diundang=inviteEl.checked===true;
+    const hadir=attendEl.checked===true;
+
+    if(hadir&&!diundang){
+      return toast(`${p.nama_pegawai} ditandai Hadir tetapi belum ditandai Diundang.`,'error');
+    }
+
+    if(diundang)invitedCount++;
+    if(hadir)hadirCount++;
+
+    rows.push({
+      id_pegawai:id,
+      nama_pegawai:p.nama_pegawai,
+      kategori:p.kategori,
+      jabatan:p.jabatan,
+      diundang,
+      hadir
+    });
+  }
+
+  if(missing>0)return toast(`Kontrol PK2 tidak lengkap untuk ${missing} pegawai. Silakan muat ulang halaman.`,'error');
+  if(rows.length!==employees.length)return toast('Data pegawai PK2 tidak lengkap. Tidak ada data yang disimpan.','error');
+  if(invitedCount===0)return toast('Belum ada pegawai yang ditandai Diundang.','error');
+
+  const tidakHadir=invitedCount-hadirCount;
+  if(!window.confirm(
+    `Simpan PK2?\n\n`+
+    `Kegiatan: ${name}\n`+
+    `Tanggal: ${date}\n\n`+
+    `Diundang: ${invitedCount} pegawai\n`+
+    `Hadir: ${hadirCount} pegawai\n`+
+    `Tidak hadir: ${tidakHadir} pegawai\n\n`+
+    `Pastikan jumlah ini sudah benar sebelum menyimpan.`
+  ))return;
+
+  setLoading(true,'Menyimpan PK2...');
+  callServer('simpanBatchPK2V2',[date,jenis,name,rows],r=>{
+    setLoading(false);
+    toast(r?.message||'PK2 selesai diproses.',r?.status||'info');
+    if(r?.status==='success'){
+      historyPage=1;
+      loadHistory();
+      loadDashboard(true);
+    }
+  });
+}
 function pk3Dates_(){
   const s=$('pk3Start')?.value,e=$('pk3End')?.value;
   if(!s||!e||e<s)return [];
@@ -654,9 +616,9 @@ function renderPK3(){
       days.forEach(d=>{
         const date=iso(d),key=date+'|'+p.id_pegawai,rec=existing[key],future=date>today;
         const hasRecord=rec&&rec.hadir!==undefined&&rec.hadir!==null;
-        const status=hasRecord?(rec.hadir===true||rec.hadir==='true'?'Hadir':'Tidak Hadir'):'Hadir';
+        const status=hasRecord?(rec.hadir===true||rec.hadir==='true'?'Hadir':'Tidak Hadir'):'';
         if(!future)done++;if(status==='Hadir')filled++;
-        html+=future?`<td class="day-cell"><span class="not-scheduled">Belum</span></td>`:`<td class="day-cell obligation-cell"><select class="status-select ${status==='Hadir'?'status-hadir':status==='Tidak Hadir'?'status-alpha':''}" data-pk3="${esc(p.id_pegawai)}" data-date="${date}"><option value="" ${!status?'selected':''}>Belum diisi</option><option value="Hadir" ${status==='Hadir'?'selected':''}>Hadir</option><option value="Tidak Hadir" ${status==='Tidak Hadir'?'selected':''}>Tidak Hadir</option></select></td>`;
+        html+=future?`<td class="day-cell"><span class="not-scheduled">Belum</span></td>`:`<td class="day-cell obligation-cell"><select class="status-select" data-pk3="${esc(p.id_pegawai)}" data-date="${date}"><option value="" ${!status?'selected':''}>Belum diisi</option><option value="Hadir" ${status==='Hadir'?'selected':''}>Hadir</option><option value="Tidak Hadir" ${status==='Tidak Hadir'?'selected':''}>Tidak Hadir</option></select></td>`;
       });
       html+=`<td><span class="pk4-summary">${filled}/${done} hadir</span></td></tr>`;
     });
@@ -725,11 +687,11 @@ function renderPK4(){
       let empFilled=0,occurred=0;
       html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.id_pegawai)} · ${esc(p.jabatan||'-')}</small></div></td>`;
       scheduled.forEach(d=>{
-        const s=iso(d),key=s+'|'+p.id_pegawai,type=obligations[key]||'',rec=existing[key],checked=rec? (rec.hadir===true||rec.hadir==='true') : true,future=s>today;
+        const s=iso(d),key=s+'|'+p.id_pegawai,type=obligations[key]||'',rec=existing[key],checked=rec?.hadir===true||rec?.hadir==='true',future=s>today;
         if(!type){html+=`<td class="day-cell"><span class="not-scheduled">Tidak dijadwalkan</span></td>`;return}
         if(!future){occurred++;total++;if(checked){filled++;empFilled++}}
         if(future){html+=`<td class="day-cell pk4-off"><div class="pk4-activity">${esc(type)}</div><span class="not-scheduled">Belum</span></td>`}
-        else{html+=`<td class="day-cell obligation-cell"><div class="pk4-activity">${esc(type)}</div><select class="status-select ${checked?'status-hadir':rec?'status-alpha':''}" data-pk4="${esc(p.id_pegawai)}" data-date="${s}" data-type="${esc(type)}"><option value="" ${!rec?'selected':''}>Belum diisi</option><option value="Hadir" ${checked?'selected':''}>Hadir</option><option value="Tidak Hadir" ${rec&&!checked?'selected':''}>Tidak Hadir</option></select></td>`}
+        else{html+=`<td class="day-cell obligation-cell"><div class="pk4-activity">${esc(type)}</div><select class="status-select" data-pk4="${esc(p.id_pegawai)}" data-date="${s}" data-type="${esc(type)}"><option value="" ${!rec?'selected':''}>Belum diisi</option><option value="Hadir" ${checked?'selected':''}>Hadir</option><option value="Tidak Hadir" ${rec&&!checked?'selected':''}>Tidak Hadir</option></select></td>`}
       });
       html+=`<td><span class="pk4-summary">${occurred?empFilled+'/'+occurred+' hadir':'Belum ada hari'}</span></td></tr>`;
     });
@@ -852,7 +814,7 @@ function reportPage(r){
   const p=r.info,s=r.statistik||{},logs=r.log_kegiatan||[],active=r.indikator||[];
   const score=(pk,label)=>active.includes(pk)?`<div class="score-box"><span>${label}</span><strong>${s[pk.toLowerCase()]??'-'}${s[pk.toLowerCase()]==null?'':'%'}</strong><i>${s[pk.toLowerCase()]==null?'Belum ada data':'dinilai'}</i></div>`:`<div class="score-box score-na"><span>${label}</span><strong>—</strong><i>Tidak berlaku</i></div>`;
   const finalValue=r.rerata==null||r.rerata===''?'-':`${r.rerata}%`;
-  return `<div class="report-page"><div class="report-head"><img src="${logo}"><div><div class="report-title">LAPORAN KINERJA PEGAWAI</div><div class="report-sub">SISKA · Sistem Informasi Kinerja SMK Grafika</div></div></div><div class="report-meta"><div><b>Nama</b>: ${esc(p.nama_pegawai)}</div><div><b>ID Pegawai</b>: ${esc(p.id_pegawai)}</div><div><b>Kategori</b>: ${esc(p.kategori)}</div><div><b>Jabatan</b>: ${esc(p.jabatan||'-')}</div><div><b>Walikelas</b>: ${esc(p.is_walikelas||'-')}</div><div><b>Periode</b>: ${$('reportStart').value?fmtDate($('reportStart').value):'Awal'} — ${$('reportEnd').value?fmtDate($('reportEnd').value):'Terakhir'}</div></div><div class="report-score">${score('PK1','PK1 · Presensi')}${score('PK2','PK2 · Kegiatan')}${score('PK3','PK3 · Piket')}${score('PK4','PK4 · Pembiasaan')}</div><div class="final-score ${gradeClass_(r.grade)}"><div class="final-label"><small>PREDIKAT</small><div class="grade-pill">${esc(r.grade||'-')}</div></div><strong>${finalValue}</strong></div><div class="report-section-title">RIWAYAT KINERJA</div><div class="report-history">${reportHistoryTables_(logs,active)}</div><div class="report-section-title">CATATAN</div><div class="report-note">Data mengikuti penilaian yang tersimpan pada SISKA.</div><div class="sign"><div>Mengetahui,<br><b>Ketua Yayasan</b><div class="sign-space"></div><b><u>MOH. MUFLIH SUTISNA, S.STp., M.Ap</u></b></div><div>Tangerang, ${new Date().toLocaleDateString('id-ID')}<br><b>Kepala Sekolah</b><div class="sign-space"></div><b><u>DWI SEPTIANI, S.T., M.Pd.V</u></b></div></div><div class="report-footer">Dicetak dari SISKA · Format F4 21,6 × 33 cm · 1 pegawai = 1 halaman</div></div>`;
+  return `<div class="report-page"><div class="report-head"><img src="${logo}"><div><div class="report-title">LAPORAN KINERJA PEGAWAI</div><div class="report-sub">SISKA · Sistem Informasi Kinerja SMK Grafika</div></div></div><div class="report-meta"><div><b>Nama</b>: ${esc(p.nama_pegawai)}</div><div><b>ID Pegawai</b>: ${esc(p.id_pegawai)}</div><div><b>Kategori</b>: ${esc(p.kategori)}</div><div><b>Jabatan</b>: ${esc(p.jabatan||'-')}</div><div><b>Walikelas</b>: ${esc(p.is_walikelas||'-')}</div><div><b>Periode</b>: ${$('reportStart').value?fmtDate($('reportStart').value):'Awal'} — ${$('reportEnd').value?fmtDate($('reportEnd').value):'Terakhir'}</div></div><div class="report-score">${score('PK1','PK1 · Presensi')}${score('PK2','PK2 · Kegiatan')}${score('PK3','PK3 · Piket')}${score('PK4','PK4 · Pembiasaan')}</div><div class="final-score ${gradeClass_(r.grade)}"><div class="final-label"><small>PREDIKAT</small><div class="grade-pill">${esc(r.grade||'-')}</div></div><strong>${finalValue}</strong></div><div class="report-section-title">RIWAYAT KINERJA</div><div class="report-history">${reportHistoryTables_(logs,active)}</div><div class="report-section-title">CATATAN</div><div class="report-note">Laporan dihasilkan dari data penilaian yang tersimpan pada SISKA. PK yang tidak berlaku berdasarkan kategori/jabatan tidak dihitung sebagai nilai 0.</div><div class="sign"><div>Mengetahui,<br><b>Ketua Yayasan</b><div class="sign-space"></div><b><u>MOH. MUFLIH SUTISNA, S.STp., M.Ap</u></b></div><div>Tangerang, ${new Date().toLocaleDateString('id-ID')}<br><b>Kepala Sekolah</b><div class="sign-space"></div><b><u>DWI SEPTIANI, S.T., M.Pd.V</u></b></div></div><div class="report-footer">Dicetak dari SISKA · Format F4 21,6 × 33 cm · 1 pegawai = 1 halaman</div></div>`;
 }
 function updateRekapCategoryOptions_(){populateCategorySelectors_();}
 function updateRekapHint_(){const type=$('rekapType')?.value||'NILAI';if($('rekapHint'))$('rekapHint').textContent=type==='PRESENSI'?'Rekap Presensi PK1 menampilkan Hadir, Sakit, Izin, Alfa, total hari, dan persentase kehadiran.':'Rekap Nilai PK menampilkan hanya indikator yang aktif untuk masing-masing kategori.'}
@@ -868,16 +830,8 @@ function loadUsers(){callServer('getAllUsers',[],d=>{$('userBody').innerHTML=(d|
 function openUserModal(old=''){let u={username:'',role:'Admin',id_pegawai:''};$('modalTitle').textContent=old?'Edit User':'Tambah User';$('modalBody').innerHTML=`<div class="form-grid"><div class="form-field"><label>Username</label><input id="uName" class="input" value="${esc(old||u.username)}"></div><div class="form-field"><label>Password</label><input id="uPass" type="password" class="input" placeholder="${old?'Kosongkan jika tidak diubah':''}"></div><div class="form-field"><label>Role</label><select id="uRole" class="select"><option>Admin</option><option>Kepegawaian</option><option>Kurikulum</option><option>Superadmin</option></select></div><div class="form-field"><label>ID Pegawai</label><input id="uPeg" class="input"></div></div>`;$('modalFoot').innerHTML=`<button class="btn" onclick="closeModal()">Batal</button><button class="btn btn-primary" onclick="saveUser('${esc(old)}')">Simpan</button>`;$('modal').classList.remove('hidden')}
 function saveUser(old){let n=$('uName').value.trim(),p=$('uPass').value,r=$('uRole').value,id=$('uPeg').value.trim();setLoading(true);if(old)callServer('updateUser', [old,n,p,r,id],x=>{setLoading(false);toast(x.message,x.status);if(x.status==='success'){closeModal();loadUsers()}});else callServer('createUser',[n,p,r,id],x=>{setLoading(false);toast(x.message,x.status);if(x.status==='success'){closeModal();loadUsers()}})}
 function deleteUser(u){if(!confirm('Hapus user '+u+'?'))return;setLoading(true);callServer('deleteUser',[u],x=>{setLoading(false);toast(x.message,x.status);if(x.status==='success')loadUsers()})}
-document.addEventListener('change',e=>{
-  const el=e.target;
-  if(el?.classList?.contains('attend-check')){
-    el.closest('td')?.classList.toggle('attend-cell-active',el.checked);
-    return;
-  }
-  if(!el?.classList?.contains('status-select'))return;
-  el.classList.remove('status-hadir','status-sakit','status-izin','status-alpha');
-  const map={'Hadir':'status-hadir','Sakit':'status-sakit','Izin':'status-izin','Tanpa Keterangan':'status-alpha','Tidak Hadir':'status-alpha'};
-  if(map[el.value])el.classList.add(map[el.value]);
+window.addEventListener('error',e=>{
+  console.error('[SISKA UI]',e.error||e.message);
 });
 
 document.addEventListener('DOMContentLoaded',()=>{
