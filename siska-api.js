@@ -1479,24 +1479,30 @@ async function simpanBatchPK2V2(
 ) {
   await requireLogin();
 
-  // Normalisasi tanggal
   tanggal = isoDate(tanggal);
+  nama = String(nama || '').trim();
+  jenis = String(jenis || '').trim();
 
-  // Tidak boleh mengisi tanggal masa depan
+  if (!tanggal) {
+    throw new Error('Tanggal PK2 wajib diisi.');
+  }
+
+  if (!nama) {
+    throw new Error('Nama kegiatan PK2 wajib diisi.');
+  }
+
   if (tanggal > today()) {
     throw new Error(
       'Tanggal belum terjadi sehingga belum dapat diisi.'
     );
   }
 
-  // Pastikan data benar-benar ada
   if (!Array.isArray(dataList) || dataList.length === 0) {
     throw new Error(
       'Tidak ada data PK2 yang dapat disimpan.'
     );
   }
 
-  // Bersihkan data yang tidak memiliki ID pegawai
   const validData = dataList.filter(
     x => x && x.id_pegawai
   );
@@ -1507,103 +1513,173 @@ async function simpanBatchPK2V2(
     );
   }
 
-  // Buat payload untuk Supabase
+  // Cegah ID pegawai ganda di payload.
+  const seen = new Set();
+  for (const x of validData) {
+    if (seen.has(x.id_pegawai)) {
+      throw new Error(
+        `Pegawai ${x.id_pegawai} muncul lebih dari satu kali.`
+      );
+    }
+    seen.add(x.id_pegawai);
+  }
+
   const timestamp = Date.now();
+  const rows = validData.map((x, i) => ({
+    transaction_code:
+      `PK2-${timestamp}-${i}`,
+    activity_date: tanggal,
+    activity_type: jenis,
+    activity_name: nama,
+    employee_code: x.id_pegawai,
+    employee_name: x.nama_pegawai || '',
+    category_snapshot: x.kategori || '',
+    invited:
+      x.diundang === undefined || x.diundang === null
+        ? true
+        : !!x.diundang,
+    attended: !!x.hadir,
+    position_snapshot: x.jabatan || ''
+  }));
 
-  const rows = validData.map(
-    (x, i) => ({
-      transaction_code:
-        `PK2-${timestamp}-${i}`,
+  // Ambil transaksi kegiatan yang sama. Jika sudah ada,
+  // kita UPDATE, bukan INSERT lagi. Ini mencegah duplikasi
+  // ketika operator membuka dan menyimpan kegiatan yang sama.
+  const { data: existing, error: existingError } = await sb
+    .from('pk2_activities')
+    .select('transaction_code,employee_code')
+    .eq('activity_date', tanggal)
+    .eq('activity_name', nama);
 
-      activity_date:
-        tanggal,
+  if (existingError) {
+    throw new Error(
+      `Gagal membaca data PK2 lama: ${existingError.message || existingError}`
+    );
+  }
 
-      activity_type:
-        jenis || '',
-
-      activity_name:
-        nama || '',
-
-      employee_code:
-        x.id_pegawai,
-
-      employee_name:
-        x.nama_pegawai || '',
-
-      category_snapshot:
-        x.kategori || '',
-
-      invited:
-        !!x.diundang,
-
-      attended:
-        !!x.hadir,
-
-      position_snapshot:
-        x.jabatan || ''
-    })
+  const existingEmployees = new Set(
+    (existing || []).map(r => r.employee_code)
   );
 
-  // Simpan ke Supabase sekaligus
-  const {
-    data: insertedRows,
-    error
-  } = await sb
+  const updateRows = rows.filter(r =>
+    existingEmployees.has(r.employee_code)
+  );
+
+  const insertRows = rows.filter(r =>
+    !existingEmployees.has(r.employee_code)
+  );
+
+  // Update seluruh row lama milik pegawai tersebut.
+  // Jika sebelumnya ada duplikat, semuanya ikut diperbaiki,
+  // sehingga getPK2Periode tidak lagi menemukan nilai false
+  // dari transaksi lama yang tertinggal.
+  if (updateRows.length) {
+    const results = await Promise.all(
+      updateRows.map(async row => {
+        const { error } = await sb
+          .from('pk2_activities')
+          .update({
+            activity_type: row.activity_type,
+            employee_name: row.employee_name,
+            category_snapshot: row.category_snapshot,
+            invited: row.invited,
+            attended: row.attended,
+            position_snapshot: row.position_snapshot
+          })
+          .eq('activity_date', tanggal)
+          .eq('activity_name', nama)
+          .eq('employee_code', row.employee_code);
+
+        return {
+          employee_code: row.employee_code,
+          error
+        };
+      })
+    );
+
+    const failed = results.find(x => x.error);
+    if (failed) {
+      throw new Error(
+        `Gagal memperbarui PK2 ${failed.employee_code}: ` +
+        `${failed.error.message || failed.error}`
+      );
+    }
+  }
+
+  // Pegawai yang belum pernah ada pada kegiatan tersebut dibuat baru.
+  if (insertRows.length) {
+    const { error } = await sb
+      .from('pk2_activities')
+      .insert(insertRows);
+
+    if (error) {
+      throw new Error(
+        `Gagal menambah data PK2 baru: ${error.message || error}`
+      );
+    }
+  }
+
+  // Verifikasi akhir. Jangan pernah mengembalikan sukses jika
+  // nilai yang tersimpan tidak sama dengan yang dikirim.
+  const { data: verifyRows, error: verifyError } = await sb
     .from('pk2_activities')
-    .insert(rows)
-    .select('transaction_code');
+    .select('employee_code,invited,attended')
+    .eq('activity_date', tanggal)
+    .eq('activity_name', nama);
 
-  // Kalau Supabase mengembalikan error,
-  // jangan pernah tampilkan status sukses.
-  if (error) {
-    console.error(
-      'Gagal menyimpan PK2:',
-      error
-    );
-
+  if (verifyError) {
     throw new Error(
-      `Gagal menyimpan PK2: ${error.message || error}`
+      `Gagal memverifikasi PK2: ${verifyError.message || verifyError}`
     );
   }
 
-  // Pastikan row benar-benar dikembalikan
-  const jumlahTersimpan =
-    Array.isArray(insertedRows)
-      ? insertedRows.length
-      : 0;
-
-  if (jumlahTersimpan !== rows.length) {
-    console.error(
-      'Jumlah data PK2 tidak sesuai.',
+  const expected = new Map(
+    rows.map(r => [
+      r.employee_code,
       {
-        dikirim: rows.length,
-        tersimpan: jumlahTersimpan
+        invited: r.invited,
+        attended: r.attended
       }
-    );
+    ])
+  );
 
-    throw new Error(
-      `Data PK2 tidak lengkap. ` +
-      `Dikirim ${rows.length} pegawai, ` +
-      `tetapi terkonfirmasi ${jumlahTersimpan} data tersimpan.`
-    );
+  const actual = new Map();
+  for (const r of verifyRows || []) {
+    // Jika ada duplikat, nilai terakhir tetap harus sama karena
+    // semua row lama tadi sudah diperbarui.
+    actual.set(r.employee_code, {
+      invited: !!r.invited,
+      attended: !!r.attended
+    });
   }
 
-  // Berhasil
+  for (const [employeeCode, want] of expected) {
+    const got = actual.get(employeeCode);
+    if (
+      !got ||
+      got.invited !== want.invited ||
+      got.attended !== want.attended
+    ) {
+      throw new Error(
+        `Verifikasi PK2 gagal untuk ${employeeCode}. ` +
+        `Data belum sesuai dengan pilihan pada form.`
+      );
+    }
+  }
+
   return {
     status: 'success',
-
     message:
-      `PK2 ${nama} berhasil disimpan ` +
-      `(${jumlahTersimpan} pegawai).`,
-
-    tanggal: tanggal,
-
+      `PK2 ${nama} berhasil disimpan. ` +
+      `${rows.length} pegawai diproses ` +
+      `(${updateRows.length} diperbarui, ${insertRows.length} ditambahkan).`,
+    tanggal,
     nama_kegiatan: nama,
-
-    jumlah: jumlahTersimpan
+    jumlah: rows.length,
+    diperbarui: updateRows.length,
+    ditambahkan: insertRows.length
   };
 }
-
 
   async function getPK2Periode(
 
@@ -2348,141 +2424,90 @@ async function simpanBatchPK2V2(
 
 
   async function scoreBool(
-
     table,
-
     id,
-
     start,
-
     end,
-
     inviteOnly = false
-
   ) {
-
     let q = sb
-
       .from(table)
-
       .select('*')
-
       .eq(
-
         'employee_code',
-
         id
-
       );
-
-
 
     const dateCol =
-
       table === 'pk2_activities'
-
         ? 'activity_date'
-
         : 'attendance_date';
 
-
-
     if (start) {
-
       q = q.gte(
-
         dateCol,
-
         start
-
       );
-
     }
-
-
 
     if (end) {
-
       q = q.lte(
-
         dateCol,
-
         end
-
       );
-
     }
-
-
 
     const data = await fetchAllRows(() => q);
 
-
-
     let rows = data || [];
 
-
-
+    /*
+     * PK2 compatibility:
+     *
+     * Form PK2 lama menyimpan seluruh pegawai dengan invited=false
+     * ketika checkbox "Diundang" belum dicentang.
+     *
+     * Jika pada periode yang sedang dihitung seorang pegawai
+     * sama sekali tidak mempunyai record invited=true, data tersebut
+     * dianggap sebagai data legacy/default dan seluruh record miliknya
+     * tetap dihitung.
+     *
+     * Jika ada minimal satu invited=true, aturan normal berlaku:
+     * hanya record yang benar-benar diundang yang dihitung.
+     *
+     * Ini mencegah nilai PK2 berubah menjadi "Belum ada data" hanya
+     * karena default checkbox lama tersimpan sebagai false.
+     */
     if (
       inviteOnly &&
       table === 'pk2_activities'
     ) {
-      // PK2 legacy compatibility:
-      // Jika seluruh row dalam satu kegiatan tersimpan invited=false,
-      // kegiatan tetap dianggap sebagai kewajiban penilaian.
-      // Jika ada minimal satu invited=true, flag undangan dihormati.
-      const activityGroups = new Map();
+      const hasExplicitInvitation =
+        rows.some(
+          r => bool(r.invited)
+        );
 
-      for (const r of rows) {
-        const key =
-          String(r.activity_date || '') + '||' +
-          String(r.activity_name || '');
-
-        let g = activityGroups.get(key);
-        if (!g) {
-          g = { rows: [], hasInvited: false };
-          activityGroups.set(key, g);
-        }
-
-        g.rows.push(r);
-        if (r.invited === true) g.hasInvited = true;
+      if (hasExplicitInvitation) {
+        rows = rows.filter(
+          r => bool(r.invited)
+        );
       }
-
-      rows = [];
-
-      for (const g of activityGroups.values()) {
-        if (g.hasInvited) {
-          rows.push(...g.rows.filter(r => r.invited === true));
-        } else {
-          rows.push(...g.rows);
-        }
-      }
+      // Jika tidak ada invited=true sama sekali,
+      // gunakan seluruh record sebagai fallback legacy.
     }
 
     if (!rows.length) {
-
       return null;
-
     }
 
-
-
     return Math.round(
-
       rows.filter(
-
-        r => r.attended
-
+        r => bool(r.attended)
       ).length /
-
-        rows.length *
-
-        100
-
+      rows.length *
+      100
     );
-
   }
-
 
 
   function finalScore(
@@ -2721,44 +2746,30 @@ async function simpanBatchPK2V2(
       if (r.status === STATUS_HADIR) x.hadir++;
     }
 
-    // PK2 memakai aturan yang sama dengan scoreBool():
-    // kegiatan legacy yang seluruh row-nya invited=false tetap dihitung.
-    const pk2ActivityMap = new Map();
-
+    const pk2Map = new Map();
     for (const r of pk2Rows || []) {
-      const key =
-        String(r.activity_date || '') + '||' +
-        String(r.activity_name || '');
+      const id = r.employee_code;
+      if (!id) continue;
 
-      let g = pk2ActivityMap.get(key);
-      if (!g) {
-        g = { rows: [], hasInvited: false };
-        pk2ActivityMap.set(key, g);
+      let x = pk2Map.get(id);
+      if (!x) {
+        x = {
+          total: 0,
+          hadir: 0,
+          invitedTotal: 0,
+          invitedHadir: 0
+        };
+        pk2Map.set(id, x);
       }
 
-      g.rows.push(r);
-      if (r.invited === true) g.hasInvited = true;
-    }
+      // Simpan seluruh transaksi untuk fallback legacy.
+      x.total++;
+      if (r.attended) x.hadir++;
 
-    const pk2Map = new Map();
-
-    for (const g of pk2ActivityMap.values()) {
-      const effectiveRows = g.hasInvited
-        ? g.rows.filter(r => r.invited === true)
-        : g.rows;
-
-      for (const r of effectiveRows) {
-        const id = r.employee_code;
-        if (!id) continue;
-
-        let x = pk2Map.get(id);
-        if (!x) {
-          x = { total: 0, hadir: 0 };
-          pk2Map.set(id, x);
-        }
-
-        x.total++;
-        if (r.attended) x.hadir++;
+      // Simpan juga transaksi yang eksplisit diundang.
+      if (bool(r.invited)) {
+        x.invitedTotal++;
+        if (r.attended) x.invitedHadir++;
       }
     }
 
@@ -2790,7 +2801,29 @@ async function simpanBatchPK2V2(
 
     const calcBool = map => id => {
       const x = map.get(id);
-      return x && x.total ? Math.round(x.hadir / x.total * 100) : null;
+      if (!x) return null;
+
+      /*
+       * Konsisten dengan scoreBool():
+       * - bila ada invited=true, hitung hanya yang diundang;
+       * - bila seluruh data PK2 untuk pegawai masih invited=false,
+       *   gunakan seluruh record sebagai fallback data legacy.
+       */
+      if (x.invitedTotal > 0) {
+        return Math.round(
+          x.invitedHadir /
+          x.invitedTotal *
+          100
+        );
+      }
+
+      return x.total
+        ? Math.round(
+            x.hadir /
+            x.total *
+            100
+          )
+        : null;
     };
 
     const calcPK1 = id => {
@@ -4161,50 +4194,37 @@ async function getRiwayatPKAgregasiV2(
 
       grouped[key] = {
         tanggal: date,
-
         kegiatan: activity,
-
         total_pegawai: 0,
-
         hadir: 0,
-
-        id_transaksi_pertama:
-          r.transaction_code || ''
+        id_transaksi_pertama: r.transaction_code || '',
+        _pegawai: {}
       };
     }
 
-    // =======================================================
-    // 8. Hitung jumlah pegawai
-    // =======================================================
+    // Deduplikasi berdasarkan pegawai. Jika data lama memiliki
+    // beberapa transaksi untuk pegawai yang sama, gunakan record terbaru.
+    const employeeCode = String(r.employee_code || '');
+    if (!employeeCode) continue;
 
-    grouped[key].total_pegawai++;
+    const previous = grouped[key]._pegawai[employeeCode];
+    const previousTime = previous?.created_at ? String(previous.created_at) : '';
+    const currentTime = r.created_at ? String(r.created_at) : '';
 
-    // =======================================================
-    // 9. Hitung jumlah hadir
-    // =======================================================
-
-    let hadir = false;
-
-    if (pkNumber === 1) {
-
-      /*
-       * PK1 menggunakan kolom status.
-       */
-      hadir =
-        clean(r.status) ===
-        STATUS_HADIR;
-
-    } else {
-
-      /*
-       * PK2, PK3, PK4 menggunakan attended.
-       */
-      hadir = !!r.attended;
+    if (!previous || currentTime >= previousTime) {
+      grouped[key]._pegawai[employeeCode] = r;
     }
+  }
 
-    if (hadir) {
-      grouped[key].hadir++;
-    }
+  // Hitung total/hadir setelah deduplikasi.
+  for (const item of Object.values(grouped)) {
+    const uniqueRows = Object.values(item._pegawai || {});
+    item.total_pegawai = uniqueRows.length;
+    item.hadir = uniqueRows.filter(r => {
+      if (pkNumber === 1) return clean(r.status) === STATUS_HADIR;
+      return !!r.attended;
+    }).length;
+    delete item._pegawai;
   }
 
   // =========================================================
@@ -4404,66 +4424,33 @@ async function getRiwayatPKAgregasiV2(
 
     const data = await fetchAllRows(() => q);
 
-    return (data || []).map(
+    // Detail PK2 harus satu baris per pegawai. Jika ada transaksi
+    // lama yang duplikat, gunakan record terbaru.
+    const unique = new Map();
 
-      r => ({
+    for (const r of data || []) {
+      const key = String(r.employee_code || '');
+      if (!key) continue;
 
-        id_transaksi:
+      const previous = unique.get(key);
+      const previousTime = previous?.created_at ? String(previous.created_at) : '';
+      const currentTime = r.created_at ? String(r.created_at) : '';
 
-          r.transaction_code,
+      if (!previous || currentTime >= previousTime) {
+        unique.set(key, r);
+      }
+    }
 
-
-
-        id_pegawai:
-
-          r.employee_code,
-
-
-
-        nama_pegawai:
-
-          r.employee_name,
-
-
-
-        kategori:
-
-          r.category_snapshot,
-
-
-
-        status:
-
-          pk == 1
-
-            ? r.status
-
-            : (
-
-                r.attended
-
-                  ? 'Hadir'
-
-                  : 'Tidak Hadir'
-
-              ),
-
-
-
-        diundang:
-
-          pk == 2
-
-            ? r.invited
-
-            : null
-
-      })
-
-    );
+    return Array.from(unique.values()).map(r => ({
+      id_transaksi: r.transaction_code,
+      id_pegawai: r.employee_code,
+      nama_pegawai: r.employee_name,
+      kategori: r.category_snapshot,
+      status: pk == 1 ? r.status : (r.attended ? 'Hadir' : 'Tidak Hadir'),
+      diundang: pk == 2 ? r.invited : null
+    }));
 
   }
-
 
 
   async function deleteRiwayatByTanggalKegiatanV2(
