@@ -1479,131 +1479,165 @@ async function simpanBatchPK2V2(
 ) {
   await requireLogin();
 
-  // Normalisasi tanggal
   tanggal = isoDate(tanggal);
+  jenis = String(jenis || '').trim();
+  nama = String(nama || '').trim();
 
-  // Tidak boleh mengisi tanggal masa depan
   if (tanggal > today()) {
-    throw new Error(
-      'Tanggal belum terjadi sehingga belum dapat diisi.'
-    );
+    throw new Error('Tanggal belum terjadi sehingga belum dapat diisi.');
   }
 
-  // Pastikan data benar-benar ada
+  if (!nama) {
+    throw new Error('Nama kegiatan wajib diisi.');
+  }
+
   if (!Array.isArray(dataList) || dataList.length === 0) {
-    throw new Error(
-      'Tidak ada data PK2 yang dapat disimpan.'
-    );
+    throw new Error('Tidak ada data PK2 yang dapat disimpan.');
   }
 
-  // Bersihkan data yang tidak memiliki ID pegawai
-  const validData = dataList.filter(
-    x => x && x.id_pegawai
-  );
-
-  if (validData.length === 0) {
-    throw new Error(
-      'Tidak ada data pegawai yang valid untuk disimpan.'
-    );
+  // Normalisasi dan cegah employee_code ganda dari frontend.
+  const unique = new Map();
+  for (const x of dataList) {
+    if (!x || !x.id_pegawai) continue;
+    const id = String(x.id_pegawai).trim();
+    if (!id) continue;
+    unique.set(id, {
+      id_pegawai: id,
+      nama_pegawai: x.nama_pegawai || '',
+      kategori: x.kategori || '',
+      jabatan: x.jabatan || '',
+      diundang: !!x.diundang,
+      hadir: !!x.hadir
+    });
   }
 
-  // Buat payload untuk Supabase
-  const timestamp = Date.now();
+  const rows = [...unique.values()];
+  if (!rows.length) {
+    throw new Error('Tidak ada data pegawai yang valid untuk disimpan.');
+  }
 
-  const rows = validData.map(
-    (x, i) => ({
-      transaction_code:
-        `PK2-${timestamp}-${i}`,
+  // Aturan bisnis: pegawai yang hadir harus termasuk yang diundang.
+  for (const x of rows) {
+    if (x.hadir && !x.diundang) {
+      throw new Error(`Data ${x.id_pegawai}: Hadir tidak boleh jika tidak diundang.`);
+    }
+  }
 
-      activity_date:
-        tanggal,
-
-      activity_type:
-        jenis || '',
-
-      activity_name:
-        nama || '',
-
-      employee_code:
-        x.id_pegawai,
-
-      employee_name:
-        x.nama_pegawai || '',
-
-      category_snapshot:
-        x.kategori || '',
-
-      invited:
-        !!x.diundang,
-
-      attended:
-        !!x.hadir,
-
-      position_snapshot:
-        x.jabatan || ''
-    })
-  );
-
-  // Simpan ke Supabase sekaligus
-  const {
-    data: insertedRows,
-    error
-  } = await sb
+  /*
+   * PK2 bersifat "satu kegiatan = satu set presensi pegawai".
+   * Versi lama selalu INSERT sehingga klik Simpan kedua kali membuat
+   * baris baru dan nilai lama tetap ikut dihitung.
+   *
+   * Di sini kita cari seluruh row kegiatan berdasarkan tanggal + nama,
+   * lalu memperbarui semua row lama per kelompok status. Dengan begitu
+   * row lama yang duplikat pun ikut disinkronkan, tanpa menghapus data.
+   */
+  let existingQuery = sb
     .from('pk2_activities')
-    .insert(rows)
-    .select('transaction_code');
+    .select('id,transaction_code,employee_code,activity_type,created_at,updated_at')
+    .eq('activity_date', tanggal)
+    .eq('activity_name', nama);
 
-  // Kalau Supabase mengembalikan error,
-  // jangan pernah tampilkan status sukses.
-  if (error) {
-    console.error(
-      'Gagal menyimpan PK2:',
-      error
-    );
-
-    throw new Error(
-      `Gagal menyimpan PK2: ${error.message || error}`
-    );
+  const { data: existingRows, error: existingError } = await existingQuery;
+  if (existingError) {
+    throw new Error(`Gagal membaca data PK2 lama: ${existingError.message || existingError}`);
   }
 
-  // Pastikan row benar-benar dikembalikan
-  const jumlahTersimpan =
-    Array.isArray(insertedRows)
-      ? insertedRows.length
-      : 0;
+  const existing = Array.isArray(existingRows) ? existingRows : [];
+  const requestedIds = new Set(rows.map(x => x.id_pegawai));
+  const existingIds = new Set(existing.map(x => String(x.employee_code)));
 
-  if (jumlahTersimpan !== rows.length) {
-    console.error(
-      'Jumlah data PK2 tidak sesuai.',
-      {
-        dikirim: rows.length,
-        tersimpan: jumlahTersimpan
-      }
-    );
-
-    throw new Error(
-      `Data PK2 tidak lengkap. ` +
-      `Dikirim ${rows.length} pegawai, ` +
-      `tetapi terkonfirmasi ${jumlahTersimpan} data tersimpan.`
-    );
+  // Update maksimal 4 request: kombinasi Diundang/Hadir.
+  const groups = new Map();
+  for (const x of rows) {
+    const key = `${x.diundang ? 1 : 0}|${x.hadir ? 1 : 0}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(x.id_pegawai);
   }
 
-  // Berhasil
+  for (const [key, employeeCodes] of groups) {
+    const [invited, attended] = key.split('|').map(Number);
+    const updatePayload = {
+      activity_type: jenis,
+      invited: invited === 1,
+      attended: attended === 1,
+      updated_at: new Date().toISOString()
+    };
+
+    const { error: updateError } = await sb
+      .from('pk2_activities')
+      .update(updatePayload)
+      .eq('activity_date', tanggal)
+      .eq('activity_name', nama)
+      .in('employee_code', employeeCodes);
+
+    if (updateError) {
+      throw new Error(`Gagal memperbarui PK2: ${updateError.message || updateError}`);
+    }
+  }
+
+  // Pegawai yang belum pernah ada pada kegiatan ini dibuat satu kali.
+  const missingRows = rows.filter(x => !existingIds.has(x.id_pegawai));
+  if (missingRows.length) {
+    const timestamp = Date.now();
+    const insertRows = missingRows.map((x, i) => ({
+      transaction_code: `PK2-${timestamp}-${i}`,
+      activity_date: tanggal,
+      activity_type: jenis,
+      activity_name: nama,
+      employee_code: x.id_pegawai,
+      employee_name: x.nama_pegawai || '',
+      category_snapshot: x.kategori || '',
+      invited: !!x.diundang,
+      attended: !!x.hadir,
+      position_snapshot: x.jabatan || ''
+    }));
+
+    const { data: inserted, error: insertError } = await sb
+      .from('pk2_activities')
+      .insert(insertRows)
+      .select('transaction_code');
+
+    if (insertError) {
+      throw new Error(`Gagal menambah data PK2: ${insertError.message || insertError}`);
+    }
+
+    if (!Array.isArray(inserted) || inserted.length !== insertRows.length) {
+      throw new Error(`Data PK2 tidak lengkap. Dikirim ${insertRows.length}, terkonfirmasi ${Array.isArray(inserted) ? inserted.length : 0}.`);
+    }
+  }
+
+  // Pastikan row yang tersimpan untuk kegiatan ini sesuai dengan jumlah
+  // pegawai yang dikirim. Tidak menghapus row lama agar data historis aman.
+  const { data: verifyRows, error: verifyError } = await sb
+    .from('pk2_activities')
+    .select('employee_code,invited,attended')
+    .eq('activity_date', tanggal)
+    .eq('activity_name', nama);
+
+  if (verifyError) {
+    throw new Error(`Gagal memverifikasi PK2: ${verifyError.message || verifyError}`);
+  }
+
+  const verifyIds = new Set((verifyRows || []).map(r => String(r.employee_code)));
+  const missingAfterSave = rows.filter(x => !verifyIds.has(x.id_pegawai));
+  if (missingAfterSave.length) {
+    throw new Error(`Verifikasi PK2 gagal: ${missingAfterSave.length} pegawai belum ditemukan.`);
+  }
+
+  const hadirCount = rows.filter(x => x.hadir).length;
+  const invitedCount = rows.filter(x => x.diundang).length;
+
   return {
     status: 'success',
-
-    message:
-      `PK2 ${nama} berhasil disimpan ` +
-      `(${jumlahTersimpan} pegawai).`,
-
-    tanggal: tanggal,
-
+    message: `PK2 ${nama} berhasil disimpan (${rows.length} pegawai) · ${hadirCount} hadir dari ${invitedCount} diundang.`,
+    tanggal,
     nama_kegiatan: nama,
-
-    jumlah: jumlahTersimpan
+    jumlah: rows.length,
+    diundang: invitedCount,
+    hadir: hadirCount
   };
 }
-
 
   async function getPK2Periode(
 
@@ -4169,13 +4203,44 @@ async function getRiwayatPKAgregasiV2(
         hadir: 0,
 
         id_transaksi_pertama:
-          r.transaction_code || ''
+          r.transaction_code || '',
+
+        // PK2 dapat memiliki row lama yang duplikat akibat versi API
+        // sebelumnya. Set ini membuat riwayat menghitung satu pegawai
+        // satu kali per kegiatan.
+        _employeeCodes: new Set()
       };
     }
 
     // =======================================================
     // 8. Hitung jumlah pegawai
     // =======================================================
+
+    // Untuk PK2, satu pegawai hanya dihitung satu kali per kegiatan.
+    // Jika ada row lama yang duplikat, gunakan row terakhir yang terbaca
+    // sebagai status terkini tanpa menggandakan total pegawai.
+    if (pkNumber === 2) {
+      const employeeCode = String(r.employee_code || '');
+      if (!employeeCode) continue;
+
+      const alreadySeen = grouped[key]._employeeCodes.has(employeeCode);
+      if (alreadySeen) {
+        // Row duplikat tetap boleh memperbarui hitungan hadir.
+        // Status akhir mengikuti row terakhir.
+        const previousRows = grouped[key]._lastStatus || new Map();
+        const previous = previousRows.get(employeeCode);
+        if (previous === true) grouped[key].hadir--;
+        const current = !!r.attended;
+        if (current) grouped[key].hadir++;
+        previousRows.set(employeeCode, current);
+        grouped[key]._lastStatus = previousRows;
+        continue;
+      }
+
+      grouped[key]._employeeCodes.add(employeeCode);
+      if (!grouped[key]._lastStatus) grouped[key]._lastStatus = new Map();
+      grouped[key]._lastStatus.set(employeeCode, !!r.attended);
+    }
 
     grouped[key].total_pegawai++;
 
@@ -4213,7 +4278,11 @@ async function getRiwayatPKAgregasiV2(
 
   const arr = Object.values(
     grouped
-  );
+  ).map(item => {
+    delete item._employeeCodes;
+    delete item._lastStatus;
+    return item;
+  });
 
   // =========================================================
   // 11. Hitung persentase kehadiran
