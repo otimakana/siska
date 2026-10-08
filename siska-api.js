@@ -1471,116 +1471,138 @@
 
 
 
-  async function simpanBatchPK2V2(
+async function simpanBatchPK2V2(
+  tanggal,
+  jenis,
+  nama,
+  dataList
+) {
+  await requireLogin();
 
-    tanggal,
+  // Normalisasi tanggal
+  tanggal = isoDate(tanggal);
 
-    jenis,
-
-    nama,
-
-    dataList
-
-  ) {
-
-    await requireLogin();
-
-
-
-    tanggal = isoDate(tanggal);
-
-
-
-    if (tanggal > today()) {
-
-      throw new Error(
-
-        'Tanggal belum terjadi sehingga belum dapat diisi.'
-
-      );
-
-    }
-
-
-
-    const rows =
-
-      (dataList || []).map(
-
-        (x, i) => ({
-
-          transaction_code:
-
-            `PK2-${Date.now()}-${i}`,
-
-          activity_date: tanggal,
-
-          activity_type: jenis,
-
-          activity_name: nama,
-
-          employee_code:
-
-            x.id_pegawai,
-
-          employee_name:
-
-            x.nama_pegawai,
-
-          category_snapshot:
-
-            x.kategori,
-
-          invited:
-
-            !!x.diundang,
-
-          attended:
-
-            !!x.hadir,
-
-          position_snapshot:
-
-            x.jabatan || ''
-
-        })
-
-      );
-
-
-
-    if (rows.length) {
-
-      const {
-
-        error
-
-      } = await sb
-
-        .from('pk2_activities')
-
-        .insert(rows);
-
-
-
-      if (error) throw error;
-
-    }
-
-
-
-    return {
-
-      status: 'success',
-
-      message:
-
-        `PK2 ${nama} berhasil disimpan.`
-
-    };
-
+  // Tidak boleh mengisi tanggal masa depan
+  if (tanggal > today()) {
+    throw new Error(
+      'Tanggal belum terjadi sehingga belum dapat diisi.'
+    );
   }
 
+  // Pastikan data benar-benar ada
+  if (!Array.isArray(dataList) || dataList.length === 0) {
+    throw new Error(
+      'Tidak ada data PK2 yang dapat disimpan.'
+    );
+  }
+
+  // Bersihkan data yang tidak memiliki ID pegawai
+  const validData = dataList.filter(
+    x => x && x.id_pegawai
+  );
+
+  if (validData.length === 0) {
+    throw new Error(
+      'Tidak ada data pegawai yang valid untuk disimpan.'
+    );
+  }
+
+  // Buat payload untuk Supabase
+  const timestamp = Date.now();
+
+  const rows = validData.map(
+    (x, i) => ({
+      transaction_code:
+        `PK2-${timestamp}-${i}`,
+
+      activity_date:
+        tanggal,
+
+      activity_type:
+        jenis || '',
+
+      activity_name:
+        nama || '',
+
+      employee_code:
+        x.id_pegawai,
+
+      employee_name:
+        x.nama_pegawai || '',
+
+      category_snapshot:
+        x.kategori || '',
+
+      invited:
+        !!x.diundang,
+
+      attended:
+        !!x.hadir,
+
+      position_snapshot:
+        x.jabatan || ''
+    })
+  );
+
+  // Simpan ke Supabase sekaligus
+  const {
+    data: insertedRows,
+    error
+  } = await sb
+    .from('pk2_activities')
+    .insert(rows)
+    .select('transaction_code');
+
+  // Kalau Supabase mengembalikan error,
+  // jangan pernah tampilkan status sukses.
+  if (error) {
+    console.error(
+      'Gagal menyimpan PK2:',
+      error
+    );
+
+    throw new Error(
+      `Gagal menyimpan PK2: ${error.message || error}`
+    );
+  }
+
+  // Pastikan row benar-benar dikembalikan
+  const jumlahTersimpan =
+    Array.isArray(insertedRows)
+      ? insertedRows.length
+      : 0;
+
+  if (jumlahTersimpan !== rows.length) {
+    console.error(
+      'Jumlah data PK2 tidak sesuai.',
+      {
+        dikirim: rows.length,
+        tersimpan: jumlahTersimpan
+      }
+    );
+
+    throw new Error(
+      `Data PK2 tidak lengkap. ` +
+      `Dikirim ${rows.length} pegawai, ` +
+      `tetapi terkonfirmasi ${jumlahTersimpan} data tersimpan.`
+    );
+  }
+
+  // Berhasil
+  return {
+    status: 'success',
+
+    message:
+      `PK2 ${nama} berhasil disimpan ` +
+      `(${jumlahTersimpan} pegawai).`,
+
+    tanggal: tanggal,
+
+    nama_kegiatan: nama,
+
+    jumlah: jumlahTersimpan
+  };
+}
 
 
   async function getPK2Periode(
@@ -3922,91 +3944,317 @@
 
 
 
-  async function getRiwayatPKAgregasiV2(
-    pk,
-    page,
-    limit,
-    filterDate,
-    search
-  ) {
-    await requireLogin();
+async function getRiwayatPKAgregasiV2(
+  pk,
+  page,
+  limit,
+  filterDate,
+  search
+) {
+  await requireLogin();
 
-    const table = {
-      1: 'pk1_attendance',
-      2: 'pk2_activities',
-      3: 'pk3_attendance',
-      4: 'pk4_attendance'
-    }[Number(pk)];
+  const pkNumber = Number(pk);
 
-    if (!table) return { data: [], total: 0 };
+  // =========================================================
+  // 1. Tentukan tabel berdasarkan PK
+  // =========================================================
 
-    const dateCol = pk == 2 ? 'activity_date' : 'attendance_date';
-    let q = sb.from(table).select('*');
-    if (filterDate) q = q.eq(dateCol, filterDate);
+  const tableMap = {
+    1: 'pk1_attendance',
+    2: 'pk2_activities',
+    3: 'pk3_attendance',
+    4: 'pk4_attendance'
+  };
 
-    const rows = await fetchAllRows(() => q);
-    const people = await getSemuaPegawai();
-    const peopleMap = Object.fromEntries(people.map(p => [p.id_pegawai, p]));
-    const cm = await categoryMap();
-    const schedules = await getMasterJadwalDasar();
-    const sm = Object.fromEntries(schedules.map(x => [x.id_jadwal, x]));
-    const grouped = {};
+  const table = tableMap[pkNumber];
 
-    for (const r of rows || []) {
-      const date = r[dateCol];
-      if (!date) continue;
-
-      const p = peopleMap[r.employee_code];
-      const category = r.category_snapshot || p?.kategori || '';
-      let activity;
-
-      if (Number(pk) === 1) {
-        activity = 'Presensi Mingguan';
-      } else if (Number(pk) === 2) {
-        activity = clean(r.activity_name);
-      } else if (Number(pk) === 3) {
-        activity = 'Piket Harian';
-      } else {
-        activity = clean(r.activity_type);
-        // Riwayat adalah transaksi yang benar-benar tersimpan.
-        // Jadwal dipakai untuk menentukan kewajiban input, bukan menghapus histori.
-        if (!activity) continue;
-      }
-
-      if (Number(pk) === 2 && !bool(r.invited)) continue;
-      if (search && !activity.toLowerCase().includes(String(search).toLowerCase())) continue;
-
-      const key = date + '||' + activity;
-      if (!grouped[key]) {
-        grouped[key] = {
-          tanggal: date,
-          kegiatan: activity,
-          total_pegawai: 0,
-          hadir: 0,
-          id_transaksi_pertama: r.transaction_code || ''
-        };
-      }
-
-      grouped[key].total_pegawai++;
-      const hadir = Number(pk) === 1
-        ? clean(r.status) === STATUS_HADIR
-        : !!r.attended;
-      if (hadir) grouped[key].hadir++;
-    }
-
-    const arr = Object.values(grouped).sort((a, b) =>
-      String(b.tanggal).localeCompare(String(a.tanggal))
-    );
-
-    const pg = Math.max(1, Number(page) || 1);
-    const lim = Number(limit) || 8;
-    const start = (pg - 1) * lim;
-
+  if (!table) {
     return {
-      data: arr.slice(start, start + lim),
-      total: arr.length
+      data: [],
+      total: 0
     };
   }
+
+  // =========================================================
+  // 2. Tentukan kolom tanggal
+  // =========================================================
+
+  const dateCol =
+    pkNumber === 2
+      ? 'activity_date'
+      : 'attendance_date';
+
+  // =========================================================
+  // 3. Query data
+  // =========================================================
+
+  let q = sb
+    .from(table)
+    .select('*');
+
+  if (filterDate) {
+    q = q.eq(
+      dateCol,
+      filterDate
+    );
+  }
+
+  /*
+   * fetchAllRows() digunakan agar data tidak berhenti
+   * pada limit default Supabase.
+   */
+  const rows = await fetchAllRows(
+    () => q
+  );
+
+  // =========================================================
+  // 4. Normalisasi search
+  // =========================================================
+
+  const searchText = clean(search).toLowerCase();
+
+  // =========================================================
+  // 5. Grouping transaksi
+  // =========================================================
+
+  const grouped = {};
+
+  for (const r of rows || []) {
+
+    // -------------------------------------------------------
+    // Tanggal
+    // -------------------------------------------------------
+
+    const date = r[dateCol];
+
+    if (!date) {
+      continue;
+    }
+
+    // -------------------------------------------------------
+    // Nama kegiatan
+    // -------------------------------------------------------
+
+    let activity = '';
+
+    if (pkNumber === 1) {
+
+      activity = 'Presensi Mingguan';
+
+    } else if (pkNumber === 2) {
+
+      /*
+       * PK2 mengambil nama kegiatan langsung dari
+       * activity_name.
+       *
+       * PENTING:
+       * Jangan filter berdasarkan invited.
+       *
+       * invited hanya menunjukkan apakah pegawai tersebut
+       * diundang pada kegiatan tersebut.
+       *
+       * Kegiatan tetap merupakan transaksi PK2 yang valid
+       * meskipun invited = false.
+       */
+
+      activity = clean(
+        r.activity_name
+      );
+
+    } else if (pkNumber === 3) {
+
+      activity = 'Piket Harian';
+
+    } else if (pkNumber === 4) {
+
+      activity = clean(
+        r.activity_type
+      );
+
+      /*
+       * Jika PK4 tidak mempunyai jenis kegiatan,
+       * transaksi tidak dapat ditampilkan sebagai riwayat
+       * yang valid.
+       */
+      if (!activity) {
+        continue;
+      }
+    }
+
+    // -------------------------------------------------------
+    // Pastikan nama kegiatan tidak kosong
+    // -------------------------------------------------------
+
+    if (!activity) {
+      continue;
+    }
+
+    // =======================================================
+    // 6. Filter pencarian
+    // =======================================================
+
+    if (
+      searchText &&
+      !activity
+        .toLowerCase()
+        .includes(searchText)
+    ) {
+      continue;
+    }
+
+    // =======================================================
+    // 7. Buat key grouping
+    //
+    // Satu kegiatan pada tanggal yang sama menjadi
+    // satu baris riwayat.
+    // =======================================================
+
+    const key =
+      String(date) +
+      '||' +
+      activity;
+
+    if (!grouped[key]) {
+
+      grouped[key] = {
+        tanggal: date,
+
+        kegiatan: activity,
+
+        total_pegawai: 0,
+
+        hadir: 0,
+
+        id_transaksi_pertama:
+          r.transaction_code || ''
+      };
+    }
+
+    // =======================================================
+    // 8. Hitung jumlah pegawai
+    // =======================================================
+
+    grouped[key].total_pegawai++;
+
+    // =======================================================
+    // 9. Hitung jumlah hadir
+    // =======================================================
+
+    let hadir = false;
+
+    if (pkNumber === 1) {
+
+      /*
+       * PK1 menggunakan kolom status.
+       */
+      hadir =
+        clean(r.status) ===
+        STATUS_HADIR;
+
+    } else {
+
+      /*
+       * PK2, PK3, PK4 menggunakan attended.
+       */
+      hadir = !!r.attended;
+    }
+
+    if (hadir) {
+      grouped[key].hadir++;
+    }
+  }
+
+  // =========================================================
+  // 10. Ubah object menjadi array
+  // =========================================================
+
+  const arr = Object.values(
+    grouped
+  );
+
+  // =========================================================
+  // 11. Hitung persentase kehadiran
+  //
+  // Tidak mengubah field yang sudah digunakan UI.
+  // Kita tambahkan hanya jika dibutuhkan oleh frontend.
+  // =========================================================
+
+  for (const item of arr) {
+
+    item.persentase =
+      item.total_pegawai > 0
+        ? Math.round(
+            (
+              item.hadir /
+              item.total_pegawai
+            ) * 100
+          )
+        : 0;
+  }
+
+  // =========================================================
+  // 12. Sorting
+  //
+  // Terbaru → terlama.
+  // Jika tanggal sama, nama kegiatan A-Z.
+  // =========================================================
+
+  arr.sort(
+    (a, b) => {
+
+      const dateCompare =
+        String(b.tanggal)
+          .localeCompare(
+            String(a.tanggal)
+          );
+
+      if (dateCompare !== 0) {
+        return dateCompare;
+      }
+
+      return String(a.kegiatan)
+        .localeCompare(
+          String(b.kegiatan),
+          'id'
+        );
+    }
+  );
+
+  // =========================================================
+  // 13. Pagination
+  // =========================================================
+
+  const pg =
+    Math.max(
+      1,
+      Number(page) || 1
+    );
+
+  const lim =
+    Math.max(
+      1,
+      Number(limit) || 8
+    );
+
+  const start =
+    (pg - 1) * lim;
+
+  const data =
+    arr.slice(
+      start,
+      start + lim
+    );
+
+  // =========================================================
+  // 14. Return
+  // =========================================================
+
+  return {
+    data: data,
+
+    total: arr.length
+  };
+}
 
 
   async function getDetailRiwayatV2(
