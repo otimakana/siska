@@ -1534,7 +1534,10 @@ async function simpanBatchPK2V2(
         x.kategori || '',
 
       invited:
-        !!x.diundang,
+        x.diundang === undefined ||
+        x.diundang === null
+          ? true
+          : !!x.diundang,
 
       attended:
         !!x.hadir,
@@ -2348,125 +2351,90 @@ async function simpanBatchPK2V2(
 
 
   async function scoreBool(
-
     table,
-
     id,
-
     start,
-
     end,
-
     inviteOnly = false
-
   ) {
-
     let q = sb
-
       .from(table)
-
       .select('*')
-
       .eq(
-
         'employee_code',
-
         id
-
       );
-
-
 
     const dateCol =
-
       table === 'pk2_activities'
-
         ? 'activity_date'
-
         : 'attendance_date';
 
-
-
     if (start) {
-
       q = q.gte(
-
         dateCol,
-
         start
-
       );
-
     }
-
-
 
     if (end) {
-
       q = q.lte(
-
         dateCol,
-
         end
-
       );
-
     }
-
-
 
     const data = await fetchAllRows(() => q);
 
-
-
     let rows = data || [];
 
-
-
+    /*
+     * PK2 compatibility:
+     *
+     * Form PK2 lama menyimpan seluruh pegawai dengan invited=false
+     * ketika checkbox "Diundang" belum dicentang.
+     *
+     * Jika pada periode yang sedang dihitung seorang pegawai
+     * sama sekali tidak mempunyai record invited=true, data tersebut
+     * dianggap sebagai data legacy/default dan seluruh record miliknya
+     * tetap dihitung.
+     *
+     * Jika ada minimal satu invited=true, aturan normal berlaku:
+     * hanya record yang benar-benar diundang yang dihitung.
+     *
+     * Ini mencegah nilai PK2 berubah menjadi "Belum ada data" hanya
+     * karena default checkbox lama tersimpan sebagai false.
+     */
     if (
-
       inviteOnly &&
-
       table === 'pk2_activities'
-
     ) {
-
-      rows =
-
-        rows.filter(
-
-          r => r.invited
-
+      const hasExplicitInvitation =
+        rows.some(
+          r => bool(r.invited)
         );
 
+      if (hasExplicitInvitation) {
+        rows = rows.filter(
+          r => bool(r.invited)
+        );
+      }
+      // Jika tidak ada invited=true sama sekali,
+      // gunakan seluruh record sebagai fallback legacy.
     }
-
-
 
     if (!rows.length) {
-
       return null;
-
     }
 
-
-
     return Math.round(
-
       rows.filter(
-
-        r => r.attended
-
+        r => bool(r.attended)
       ).length /
-
-        rows.length *
-
-        100
-
+      rows.length *
+      100
     );
-
   }
-
 
 
   function finalScore(
@@ -2707,16 +2675,29 @@ async function simpanBatchPK2V2(
 
     const pk2Map = new Map();
     for (const r of pk2Rows || []) {
-      if (!r.invited) continue;
       const id = r.employee_code;
       if (!id) continue;
+
       let x = pk2Map.get(id);
       if (!x) {
-        x = { total: 0, hadir: 0 };
+        x = {
+          total: 0,
+          hadir: 0,
+          invitedTotal: 0,
+          invitedHadir: 0
+        };
         pk2Map.set(id, x);
       }
+
+      // Simpan seluruh transaksi untuk fallback legacy.
       x.total++;
       if (r.attended) x.hadir++;
+
+      // Simpan juga transaksi yang eksplisit diundang.
+      if (bool(r.invited)) {
+        x.invitedTotal++;
+        if (r.attended) x.invitedHadir++;
+      }
     }
 
     const pk3Map = new Map();
@@ -2747,7 +2728,29 @@ async function simpanBatchPK2V2(
 
     const calcBool = map => id => {
       const x = map.get(id);
-      return x && x.total ? Math.round(x.hadir / x.total * 100) : null;
+      if (!x) return null;
+
+      /*
+       * Konsisten dengan scoreBool():
+       * - bila ada invited=true, hitung hanya yang diundang;
+       * - bila seluruh data PK2 untuk pegawai masih invited=false,
+       *   gunakan seluruh record sebagai fallback data legacy.
+       */
+      if (x.invitedTotal > 0) {
+        return Math.round(
+          x.invitedHadir /
+          x.invitedTotal *
+          100
+        );
+      }
+
+      return x.total
+        ? Math.round(
+            x.hadir /
+            x.total *
+            100
+          )
+        : null;
     };
 
     const calcPK1 = id => {
