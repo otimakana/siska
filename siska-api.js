@@ -525,6 +525,145 @@
   }
 
 
+
+  // ============================================================
+  // JADWAL KHUSUS PK3 / PK4 — TERPISAH
+  // PK3 -> indicator_weekly_schedules (khusus PK3)
+  // PK4 -> pk4_weekly_schedules (khusus PK4)
+  // Tidak memakai ON CONFLICT agar tidak bergantung pada constraint
+  // lama yang mungkin belum tersedia di database.
+  // ============================================================
+  async function getIndicatorWeeklySchedules(indicatorCode) {
+    await requireLogin();
+    const code = String(indicatorCode || '').toUpperCase();
+    if (!['PK3', 'PK4'].includes(code)) {
+      throw new Error('Indicator PK3/PK4 tidak valid.');
+    }
+
+    const table = code === 'PK4'
+      ? 'pk4_weekly_schedules'
+      : 'indicator_weekly_schedules';
+
+    let q = sb.from(table).select('*').eq('is_active', true).order('employee_code');
+    if (code === 'PK3') q = q.eq('indicator_code', 'PK3');
+
+    const data = await fetchAllRows(() => q);
+    return (data || []).map(x => ({
+      indicator_code: code,
+      employee_code: x.employee_code,
+      monday: !!x.monday,
+      tuesday: !!x.tuesday,
+      wednesday: !!x.wednesday,
+      thursday: !!x.thursday,
+      friday: !!x.friday,
+      saturday: !!x.saturday,
+      sunday: !!x.sunday,
+      is_active: x.is_active !== false
+    }));
+  }
+
+  function normalizeIndicatorScheduleRow(code, x) {
+    return {
+      ...(code === 'PK3' ? { indicator_code: 'PK3' } : {}),
+      employee_code: clean(x.employee_code),
+      monday: !!x.monday,
+      tuesday: !!x.tuesday,
+      wednesday: !!x.wednesday,
+      thursday: !!x.thursday,
+      friday: !!x.friday,
+      saturday: !!x.saturday,
+      sunday: !!x.sunday,
+      is_active: x.is_active !== false
+    };
+  }
+
+  async function saveIndicatorWeeklySchedule(
+    indicatorCode, employeeCode,
+    monday, tuesday, wednesday, thursday,
+    friday, saturday, sunday, isActive = true
+  ) {
+    const result = await saveIndicatorWeeklySchedulesBatch(indicatorCode, [{
+      employee_code: employeeCode,
+      monday, tuesday, wednesday, thursday,
+      friday, saturday, sunday, is_active: isActive
+    }]);
+    return result;
+  }
+
+  async function saveIndicatorWeeklySchedulesBatch(indicatorCode, rows) {
+    clearSiskaCache();
+    await requireAdmin();
+
+    const code = String(indicatorCode || '').toUpperCase();
+    if (!['PK3', 'PK4'].includes(code)) {
+      return { status: 'error', message: 'PK harus PK3 atau PK4.' };
+    }
+
+    const people = await getSemuaPegawai();
+    const cm = await categoryMap();
+    const pm = Object.fromEntries(people.map(x => [String(x.id_pegawai), x]));
+    const payload = [];
+    const seen = new Set();
+
+    (rows || []).forEach(x => {
+      const id = clean(x.employee_code);
+      const p = pm[id];
+      if (!p || !(cm[p.kategori] || []).includes(code)) return;
+      if (seen.has(id)) return;
+      seen.add(id);
+      payload.push(normalizeIndicatorScheduleRow(code, x));
+    });
+
+    if (!payload.length) {
+      return { status: 'error', message: `Tidak ada pegawai yang valid untuk ${code}.` };
+    }
+
+    const table = code === 'PK4'
+      ? 'pk4_weekly_schedules'
+      : 'indicator_weekly_schedules';
+
+    // Jangan memakai upsert/ON CONFLICT.
+    // Ini sengaja dibuat kompatibel dengan database lama PK3 dan tabel PK4 baru.
+    const ids = payload.map(x => x.employee_code);
+    let existingQuery = sb.from(table).select('employee_code');
+    if (code === 'PK3') existingQuery = existingQuery.eq('indicator_code', 'PK3');
+    existingQuery = existingQuery.in('employee_code', ids);
+    const { data: existingRows, error: existingError } = await existingQuery;
+    if (existingError) throw existingError;
+
+    const existing = new Set((existingRows || []).map(x => String(x.employee_code)));
+    const inserts = payload.filter(x => !existing.has(x.employee_code));
+    const updates = payload.filter(x => existing.has(x.employee_code));
+
+    if (inserts.length) {
+      const { error } = await sb.from(table).insert(inserts);
+      if (error) throw error;
+    }
+
+    for (const row of updates) {
+      let q = sb.from(table).update({
+        monday: row.monday,
+        tuesday: row.tuesday,
+        wednesday: row.wednesday,
+        thursday: row.thursday,
+        friday: row.friday,
+        saturday: row.saturday,
+        sunday: row.sunday,
+        is_active: row.is_active,
+        updated_at: new Date().toISOString()
+      }).eq('employee_code', row.employee_code);
+      if (code === 'PK3') q = q.eq('indicator_code', 'PK3');
+      const { error } = await q;
+      if (error) throw error;
+    }
+
+    return {
+      status: 'success',
+      message: `${code}: ${payload.length} jadwal pegawai berhasil disimpan.`
+    };
+  }
+
+
   async function getPenugasanPK1(
 
     tanggal,
@@ -836,6 +975,23 @@
     };
     return !!schedule?.[map[dow]];
   }
+
+  function indicatorDayFlag(schedule, date) {
+    if (!schedule) return false;
+    const dow = calendarDayOfWeek(date);
+    const map = {
+      0: 'sunday',
+      1: 'monday',
+      2: 'tuesday',
+      3: 'wednesday',
+      4: 'thursday',
+      5: 'friday',
+      6: 'saturday'
+    };
+    return !!schedule[map[dow]];
+  }
+
+
 
 
   async function getPK1Periode(
@@ -1725,291 +1881,92 @@ async function simpanBatchPK2V2(
 
 
 
-  async function getPK3Periode(
-
-    startDate,
-
-    endDate
-
-  ) {
-
+  async function getPK3Periode(startDate, endDate) {
     await requireLogin();
+    startDate = isoDate(startDate);
+    endDate = isoDate(endDate);
+    if (!startDate || !endDate || endDate < startDate) {
+      throw new Error('Periode PK3 tidak valid.');
+    }
 
+    const [data, people, cm, scheduleRows] = await Promise.all([
+      fetchAllRows(() => sb.from('pk3_attendance').select('*')
+        .gte('attendance_date', startDate).lte('attendance_date', endDate)),
+      getSemuaPegawai(),
+      categoryMap(),
+      getIndicatorWeeklySchedules('PK3')
+    ]);
 
-
-    const data = await fetchAllRows(() => sb.from('pk3_attendance').select('*').gte('attendance_date', startDate).lte('attendance_date', endDate));
-
-
-
-    const people =
-
-      await getSemuaPegawai();
-
-
-
-    const cm =
-
-      await categoryMap();
-
-
-
-    const allowed =
-
-      new Set(
-
-        people
-
-          .filter(p =>
-
-            (
-
-              cm[p.kategori] || []
-
-            ).includes('PK3')
-
-          )
-
-          .map(p =>
-
-            p.id_pegawai
-
-          )
-
-      );
-
-
-
+    const scheduleMap = Object.fromEntries(
+      scheduleRows.map(x => [String(x.employee_code), x])
+    );
+    const allowed = people.filter(p => (cm[p.kategori] || []).includes('PK3'));
+    const allowedSet = new Set(allowed.map(p => p.id_pegawai));
+    const obligations = {};
     const presensi = {};
 
-
+    for (const p of allowed) {
+      const sch = scheduleMap[String(p.id_pegawai)];
+      for (let ds = startDate; ds <= endDate; ds = addCalendarDays(ds, 1)) {
+        if (indicatorDayFlag(sch, ds)) {
+          obligations[ds + '|' + p.id_pegawai] = true;
+        }
+      }
+    }
 
     (data || []).forEach(r => {
-
-      if (
-
-        allowed.has(
-
-          r.employee_code
-
-        )
-
-      ) {
-
-        presensi[
-
-          r.attendance_date +
-
-          '|' +
-
-          r.employee_code
-
-        ] = {
-
-          hadir: r.attended
-
-        };
-
+      const key = r.attendance_date + '|' + r.employee_code;
+      if (allowedSet.has(r.employee_code) && obligations[key]) {
+        presensi[key] = { hadir: r.attended };
       }
-
     });
 
-
-
-    return {
-
-      presensi,
-
-      periode: {
-
-        start: startDate,
-
-        end: endDate
-
-      }
-
-    };
-
+    return { presensi, obligations, periode: { start: startDate, end: endDate } };
   }
 
-
-
-  async function simpanBatchPK3Periode(
-
-    startDate,
-
-    endDate,
-
-    dataList
-
-  ) {
-
+  async function simpanBatchPK3Periode(startDate, endDate, dataList) {
     await requireLogin();
+    if (endDate < startDate) throw new Error('Periode PK3 tidak valid.');
+    if (endDate > today()) throw new Error('Tanggal belum terjadi sehingga belum dapat diisi.');
 
-
-
-    if (endDate < startDate) {
-
-      throw new Error(
-
-        'Periode PK3 tidak valid.'
-
-      );
-
-    }
-
-
-
-    if (endDate > today()) {
-
-      throw new Error(
-
-        'Tanggal belum terjadi sehingga belum dapat diisi.'
-
-      );
-
-    }
-
-
-
-    const people =
-
-      await getSemuaPegawai();
-
-
-
-    const cm =
-
-      await categoryMap();
-
-
-
-    const pm = Object.fromEntries(
-
-      people.map(x => [
-
-        x.id_pegawai,
-
-        x
-
-      ])
-
+    const [people, cm, scheduleRows] = await Promise.all([
+      getSemuaPegawai(), categoryMap(), getIndicatorWeeklySchedules('PK3')
+    ]);
+    const pm = Object.fromEntries(people.map(x => [x.id_pegawai, x]));
+    const scheduleMap = Object.fromEntries(
+      scheduleRows.map(x => [String(x.employee_code), x])
     );
-
-
-
     const rows = [];
 
+    (dataList || []).forEach(x => {
+      const p = pm[x.id_pegawai];
+      const scheduled = p &&
+        (cm[p.kategori] || []).includes('PK3') &&
+        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], x.tanggal);
+      if (!scheduled) return;
 
-
-    (dataList || []).forEach(
-
-      x => {
-
-        const p =
-
-          pm[x.id_pegawai];
-
-
-
-        if (
-
-          !p ||
-
-          !['Tendik', 'Struktural']
-
-            .includes(p.kategori)
-
-        ) {
-
-          return;
-
-        }
-
-
-
-        rows.push({
-
-          transaction_code:
-
-            `PK3-${x.tanggal}-${x.id_pegawai}`,
-
-          attendance_date:
-
-            x.tanggal,
-
-          employee_code:
-
-            x.id_pegawai,
-
-          employee_name:
-
-            p.nama_pegawai,
-
-          category_snapshot:
-
-            p.kategori,
-
-          attended:
-
-            !!x.hadir,
-
-          position_snapshot:
-
-            p.jabatan || ''
-
-        });
-
-      }
-
-    );
-
-
+      rows.push({
+        transaction_code: `PK3-${x.tanggal}-${x.id_pegawai}`,
+        attendance_date: x.tanggal,
+        employee_code: x.id_pegawai,
+        employee_name: p.nama_pegawai,
+        category_snapshot: p.kategori,
+        attended: !!x.hadir,
+        position_snapshot: p.jabatan || ''
+      });
+    });
 
     if (rows.length) {
-
-      const {
-
-        error
-
-      } = await sb
-
-        .from('pk3_attendance')
-
-        .upsert(
-
-          rows,
-
-          {
-
-            onConflict:
-
-              'attendance_date,employee_code'
-
-          }
-
-        );
-
-
-
+      const { error } = await sb.from('pk3_attendance').upsert(rows, {
+        onConflict: 'attendance_date,employee_code'
+      });
       if (error) throw error;
-
     }
-
-
-
     return {
-
       status: 'success',
-
-      message:
-
-        `PK3 berhasil disimpan. ${rows.length} data diproses.`
-
+      message: `PK3 berhasil disimpan. ${rows.length} data diproses.`
     };
-
   }
-
-
 
   async function simpanBatchPK3V2(
 
@@ -2037,239 +1994,103 @@ async function simpanBatchPK2V2(
     await requireLogin();
     startDate = isoDate(startDate);
     endDate = isoDate(endDate);
-    if (!startDate || !endDate || endDate < startDate) throw new Error('Periode PK4 tidak valid.');
+    if (!startDate || !endDate || endDate < startDate) {
+      throw new Error('Periode PK4 tidak valid.');
+    }
 
-    const people = await getSemuaPegawai();
-    const cm = await categoryMap();
-    const schedules = await getMasterJadwalDasar();
-    const sm = Object.fromEntries(schedules.map(x => [x.id_jadwal, x]));
+    const [people, cm, scheduleRows, rows] = await Promise.all([
+      getSemuaPegawai(),
+      categoryMap(),
+      getIndicatorWeeklySchedules('PK4'),
+      fetchAllRows(() => sb.from('pk4_attendance').select('*')
+        .gte('attendance_date', startDate).lte('attendance_date', endDate))
+    ]);
+
+    const scheduleMap = Object.fromEntries(
+      scheduleRows.map(x => [String(x.employee_code), x])
+    );
     const allowed = people.filter(p => (cm[p.kategori] || []).includes('PK4'));
     const allowedSet = new Set(allowed.map(p => p.id_pegawai));
-
     const obligations = {};
 
-    // Tanggal PK4 diproses sebagai tanggal kalender murni.
-    // Tidak menggunakan Date + timezone agar tidak bergeser satu hari.
     for (const p of allowed) {
-      const sch = sm[p.jadwal_dasar_id || 'JD-001'] || sm['JD-001'];
+      const sch = scheduleMap[String(p.id_pegawai)];
       for (let ds = startDate; ds <= endDate; ds = addCalendarDays(ds, 1)) {
-        if (!dayFlag(sch, ds)) continue;
+        if (!indicatorDayFlag(sch, ds)) continue;
         const expected = global.__siskaPk4Expected(ds);
-        if (!expected) continue;
-        obligations[ds + '|' + p.id_pegawai] = expected;
+        if (expected) obligations[ds + '|' + p.id_pegawai] = expected;
       }
     }
 
-    const rows = await fetchAllRows(() => sb.from('pk4_attendance').select('*').gte('attendance_date', startDate).lte('attendance_date', endDate));
     const presensi = {};
     for (const r of rows || []) {
-      if (!allowedSet.has(r.employee_code)) continue;
-      const expected = global.__siskaPk4Expected(r.attendance_date);
-      if (expected !== r.activity_type) continue;
       const key = r.attendance_date + '|' + r.employee_code;
-      presensi[key] = { hadir: r.attended, jenis_pembiasaan: r.activity_type };
+      const expected = global.__siskaPk4Expected(r.attendance_date);
+      if (allowedSet.has(r.employee_code) &&
+          obligations[key] &&
+          expected === r.activity_type) {
+        presensi[key] = { hadir: r.attended, jenis_pembiasaan: r.activity_type };
+      }
     }
 
-    return {
-      periode: { start: startDate, end: endDate },
-      obligations,
-      presensi,
-      schedule: schedules
-    };
+    return { periode: { start: startDate, end: endDate }, obligations, presensi };
   }
 
-
-  async function simpanBatchPK4Periode(
-
-    startDate,
-
-    endDate,
-
-    dataList
-
-  ) {
-
+  async function simpanBatchPK4Periode(startDate, endDate, dataList) {
     await requireLogin();
+    if (endDate < startDate) throw new Error('Periode PK4 tidak valid.');
+    if (endDate > today()) throw new Error('Tanggal belum terjadi sehingga belum dapat diisi.');
 
-
-
-    if (endDate < startDate) {
-
-      throw new Error(
-
-        'Periode PK4 tidak valid.'
-
-      );
-
-    }
-
-
-
-    if (endDate > today()) {
-
-      throw new Error(
-
-        'Tanggal belum terjadi sehingga belum dapat diisi.'
-
-      );
-
-    }
-
-
-
-    const people =
-
-      await getSemuaPegawai();
-
-
-
-    const cm =
-
-      await categoryMap();
-
-
-
+    const [people, cm, scheduleRows] = await Promise.all([
+      getSemuaPegawai(), categoryMap(), getIndicatorWeeklySchedules('PK4')
+    ]);
     const pm = Object.fromEntries(people.map(x => [x.id_pegawai, x]));
-    const schedules = await getMasterJadwalDasar();
-    const sm = Object.fromEntries(schedules.map(x => [x.id_jadwal, x]));
-
+    const scheduleMap = Object.fromEntries(
+      scheduleRows.map(x => [String(x.employee_code), x])
+    );
     const rows = [];
 
     (dataList || []).forEach(x => {
       const p = pm[x.id_pegawai];
-      const sch = p ? (sm[p.jadwal_dasar_id || 'JD-001'] || sm['JD-001']) : null;
-      const expected = sch && dayFlag(sch, x.tanggal)
-        ? global.__siskaPk4Expected(x.tanggal)
-        : null;
-
-      if (!expected || !p || !(cm[p.kategori] || []).includes('PK4')) {
-        return;
-      }
+      const scheduled = p &&
+        (cm[p.kategori] || []).includes('PK4') &&
+        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], x.tanggal);
+      const expected = scheduled ? global.__siskaPk4Expected(x.tanggal) : null;
+      if (!expected) return;
 
       rows.push({
-
-        transaction_code:
-
-          `PK4-${x.tanggal}-${x.id_pegawai}`,
-
-        attendance_date:
-
-          x.tanggal,
-
-        activity_type:
-
-          expected,
-
-        employee_code:
-
-          x.id_pegawai,
-
-        employee_name:
-
-          p.nama_pegawai,
-
-        category_snapshot:
-
-          p.kategori,
-
-        attended:
-
-          !!x.hadir,
-
-        position_snapshot:
-
-          p.jabatan || ''
-
+        transaction_code: `PK4-${x.tanggal}-${x.id_pegawai}`,
+        attendance_date: x.tanggal,
+        activity_type: expected,
+        employee_code: x.id_pegawai,
+        employee_name: p.nama_pegawai,
+        category_snapshot: p.kategori,
+        attended: !!x.hadir,
+        position_snapshot: p.jabatan || ''
       });
-
     });
 
-
-
     if (rows.length) {
-
-      const {
-
-        error
-
-      } = await sb
-
-        .from('pk4_attendance')
-
-        .upsert(
-
-          rows,
-
-          {
-
-            onConflict:
-
-              'attendance_date,employee_code'
-
-          }
-
-        );
-
-
-
+      const { error } = await sb.from('pk4_attendance').upsert(rows, {
+        onConflict: 'attendance_date,employee_code'
+      });
       if (error) throw error;
-
     }
-
-
-
     return {
-
       status: 'success',
-
-      message:
-
-        `PK4 berhasil disimpan. ${rows.length} data diproses.`
-
+      message: `PK4 berhasil disimpan. ${rows.length} data diproses.`
     };
-
   }
 
-
-
-  async function simpanBatchPK4V2(
-
-    tanggal,
-
-    jenis,
-
-    dataList
-
-  ) {
-
+  async function simpanBatchPK4V2(tanggal, jenis, dataList) {
     return simpanBatchPK4Periode(
-
-      tanggal,
-
-      tanggal,
-
-      (dataList || []).map(
-
-        x => ({
-
-          ...x,
-
-          jenis_pembiasaan:
-
-            global.__siskaPk4Expected(
-
-              tanggal
-
-            )
-
-        })
-
-      )
-
+      tanggal, tanggal,
+      (dataList || []).map(x => ({
+        ...x,
+        jenis_pembiasaan: global.__siskaPk4Expected(tanggal)
+      }))
     );
-
   }
-
 
 
   global.__siskaPk4Expected = d => {
@@ -2454,6 +2275,25 @@ async function simpanBatchPK2V2(
 
 
     let rows = data || [];
+
+    // PK3/PK4 hanya menghitung transaksi yang memang terjadwal.
+    if (table === 'pk3_attendance' || table === 'pk4_attendance') {
+      const code = table === 'pk3_attendance' ? 'PK3' : 'PK4';
+      const scheduleRows = await getIndicatorWeeklySchedules(code);
+      const scheduleMap = Object.fromEntries(
+        scheduleRows.map(x => [String(x.employee_code), x])
+      );
+      rows = rows.filter(r =>
+        indicatorDayFlag(
+          scheduleMap[String(r.employee_code)],
+          r[dateCol]
+        ) &&
+        (
+          table !== 'pk4_attendance' ||
+          global.__siskaPk4Expected(r[dateCol]) === r.activity_type
+        )
+      );
+    }
 
 
 
@@ -2731,11 +2571,11 @@ async function simpanBatchPK2V2(
       ),
       fetchAllRows(() =>
         sb.from('pk3_attendance')
-          .select('employee_code,attended')
+          .select('employee_code,attendance_date,attended')
       ),
       fetchAllRows(() =>
         sb.from('pk4_attendance')
-          .select('employee_code,attended')
+          .select('employee_code,attendance_date,activity_type,attended')
       )
     ]);
 
@@ -2796,8 +2636,23 @@ async function simpanBatchPK2V2(
       }
     }
 
+    const [pk3Schedules, pk4Schedules] = await Promise.all([
+      getIndicatorWeeklySchedules('PK3'),
+      getIndicatorWeeklySchedules('PK4')
+    ]);
+    const pk3ScheduleMap = Object.fromEntries(
+      pk3Schedules.map(x => [String(x.employee_code), x])
+    );
+    const pk4ScheduleMap = Object.fromEntries(
+      pk4Schedules.map(x => [String(x.employee_code), x])
+    );
+
     const pk3Map = new Map();
     for (const r of pk3Rows || []) {
+      if (!indicatorDayFlag(
+        pk3ScheduleMap[String(r.employee_code)],
+        r.attendance_date
+      )) continue;
       const id = r.employee_code;
       if (!id) continue;
       let x = pk3Map.get(id);
@@ -2811,6 +2666,13 @@ async function simpanBatchPK2V2(
 
     const pk4Map = new Map();
     for (const r of pk4Rows || []) {
+      if (
+        !indicatorDayFlag(
+          pk4ScheduleMap[String(r.employee_code)],
+          r.attendance_date
+        ) ||
+        global.__siskaPk4Expected(r.attendance_date) !== r.activity_type
+      ) continue;
       const id = r.employee_code;
       if (!id) continue;
       let x = pk4Map.get(id);
@@ -2891,6 +2753,23 @@ async function simpanBatchPK2V2(
 
     recentSources.forEach(([table, dateCol], index) => {
       for (const x of recentResults[index]) {
+        if (
+          table === 'pk3_attendance' &&
+          !indicatorDayFlag(
+            pk3ScheduleMap[String(x.employee_code)],
+            x[dateCol]
+          )
+        ) continue;
+        if (
+          table === 'pk4_attendance' &&
+          (
+            !indicatorDayFlag(
+              pk4ScheduleMap[String(x.employee_code)],
+              x[dateCol]
+            ) ||
+            global.__siskaPk4Expected(x[dateCol]) !== x.activity_type
+          )
+        ) continue;
         recent.push({
           tanggal: x[dateCol],
           nama_pegawai: x.employee_name,
@@ -3043,6 +2922,15 @@ async function simpanBatchPK2V2(
     const out = [];
 
 
+
+    const reportPk3Schedules = await getIndicatorWeeklySchedules('PK3');
+    const reportPk4Schedules = await getIndicatorWeeklySchedules('PK4');
+    const reportPk3Map = Object.fromEntries(
+      reportPk3Schedules.map(x => [String(x.employee_code), x])
+    );
+    const reportPk4Map = Object.fromEntries(
+      reportPk4Schedules.map(x => [String(x.employee_code), x])
+    );
 
     for (const p of people) {
 
@@ -3237,6 +3125,25 @@ async function simpanBatchPK2V2(
         const r = await fetchAllRows(() => q);
 
         (r || []).forEach(x => {
+
+          if (
+            table === 'pk3_attendance' &&
+            !indicatorDayFlag(
+              reportPk3Map[String(x.employee_code)],
+              x[dateCol]
+            )
+          ) return;
+
+          if (
+            table === 'pk4_attendance' &&
+            (
+              !indicatorDayFlag(
+                reportPk4Map[String(x.employee_code)],
+                x[dateCol]
+              ) ||
+              global.__siskaPk4Expected(x[dateCol]) !== x.activity_type
+            )
+          ) return;
 
           logs.push({
 
@@ -4080,9 +3987,27 @@ async function getRiwayatPKAgregasiV2(
    * fetchAllRows() digunakan agar data tidak berhenti
    * pada limit default Supabase.
    */
-  const rows = await fetchAllRows(
+  let rows = await fetchAllRows(
     () => q
   );
+
+  if (pkNumber === 3 || pkNumber === 4) {
+    const code = pkNumber === 3 ? 'PK3' : 'PK4';
+    const scheduleRows = await getIndicatorWeeklySchedules(code);
+    const scheduleMap = Object.fromEntries(
+      scheduleRows.map(x => [String(x.employee_code), x])
+    );
+    rows = (rows || []).filter(r =>
+      indicatorDayFlag(
+        scheduleMap[String(r.employee_code)],
+        r[dateCol]
+      ) &&
+      (
+        pkNumber !== 4 ||
+        global.__siskaPk4Expected(r[dateCol]) === r.activity_type
+      )
+    );
+  }
 
   // =========================================================
   // 4. Normalisasi search
@@ -4471,7 +4396,25 @@ async function getRiwayatPKAgregasiV2(
 
 
 
-    const data = await fetchAllRows(() => q);
+    let data = await fetchAllRows(() => q);
+
+    if (pk == 3 || pk == 4) {
+      const code = pk == 3 ? 'PK3' : 'PK4';
+      const scheduleRows = await getIndicatorWeeklySchedules(code);
+      const scheduleMap = Object.fromEntries(
+        scheduleRows.map(x => [String(x.employee_code), x])
+      );
+      data = (data || []).filter(r =>
+        indicatorDayFlag(
+          scheduleMap[String(r.employee_code)],
+          r[dateCol]
+        ) &&
+        (
+          pk != 4 ||
+          global.__siskaPk4Expected(r[dateCol]) === r.activity_type
+        )
+      );
+    }
 
     return (data || []).map(
 
@@ -6143,6 +6086,10 @@ async function getRiwayatPKAgregasiV2(
     saveMasterJadwalDasar,
 
     setJadwalDasarPegawai,
+
+    getIndicatorWeeklySchedules,
+    saveIndicatorWeeklySchedule,
+    saveIndicatorWeeklySchedulesBatch,
 
 
 
