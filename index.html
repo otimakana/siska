@@ -159,7 +159,7 @@
     </div>
 
     <div id="pk2Panel" class="hidden">
-      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tentukan siapa yang diundang, lalu tandai hadir. Tampilan dibuat dua langkah agar mudah.</span></div><span id="pk2Summary" class="muted" style="font-weight:700;margin-right:10px">Diundang 0 · Hadir 0 · Tidak hadir 0</span><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div>
+      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tentukan siapa yang diundang, lalu tandai hadir. Tampilan dibuat dua langkah agar mudah.</span></div><div class="actions" style="align-items:center"><span id="pk2Summary" class="muted" style="font-weight:700">Diundang 0 · Hadir 0 · Tidak hadir 0</span><button class="btn" type="button" onclick="setAllPK2Hadir()" style="background:#e9f9f2;border-color:#bfe8d3;color:#08754e">✓ Hadir Semua</button><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div></div>
         <div class="form-grid" style="margin-bottom:15px"><div class="form-field"><label>Jenis Kegiatan</label><select id="pk2Jenis" class="select"><option>Rapat</option><option>Upacara</option><option>Workshop</option><option>Kegiatan Sekolah</option><option>Lainnya</option></select></div><div class="form-field"><label>Tanggal</label><input id="pk2Tanggal" type="date" class="input"></div><div class="form-field full"><label>Nama Kegiatan</label><input id="pk2Nama" class="input" placeholder="Contoh: Rapat Evaluasi Bulanan"></div></div>
         <div class="filters"><div class="filter-item"><input id="pk2Search" class="input" placeholder="Cari pegawai..." oninput="renderPK2()"></div></div>
         <div class="table-wrap"><table class="table"><thead><tr><th>Pegawai</th><th>Kategori/Jabatan</th><th style="text-align:center">Diundang</th><th style="text-align:center">Hadir</th></tr></thead><tbody id="pk2Body"></tbody></table></div>
@@ -542,6 +542,22 @@ function updatePK2Summary_(){
   const hadir=attends.filter(x=>x.checked).length;
   const el=$('pk2Summary');
   if(el)el.textContent=`Diundang ${invited} · Hadir ${hadir} · Tidak hadir ${Math.max(0,invited-hadir)}`;
+}
+function setAllPK2Hadir(){
+  const rows=[...document.querySelectorAll('#pk2Body tr[data-pk2-row]')];
+  const attends=document.querySelectorAll('#pk2Body input[data-attend]');
+  if(!attends.length)return toast('Tidak ada pegawai pada daftar PK2.','info');
+
+  // Hadir berarti pegawai juga diundang. Set keduanya sekaligus.
+  rows.forEach(row=>{
+    const invite=row.querySelector('input[data-invite]');
+    const attend=row.querySelector('input[data-attend]');
+    if(invite)invite.checked=true;
+    if(attend)attend.checked=true;
+    row.classList.add('pk2-row-hadir');
+  });
+  updatePK2Summary_();
+  toast(`${attends.length} pegawai diatur menjadi Hadir. Klik Simpan Kegiatan untuk menyimpan.`,'success');
 }
 function savePK2(){
   const date=$('pk2Tanggal')?.value||'';
