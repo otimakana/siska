@@ -159,7 +159,7 @@
     </div>
 
     <div id="pk2Panel" class="hidden">
-      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tentukan siapa yang diundang, lalu tandai hadir. Tampilan dibuat dua langkah agar mudah.</span></div><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div>
+      <div class="card section"><div class="section-head"><div><h3>PK2 · Kegiatan</h3><span class="muted">Tentukan siapa yang diundang, lalu tandai hadir. Tampilan dibuat dua langkah agar mudah.</span></div><span id="pk2Summary" class="muted" style="font-weight:700;margin-right:10px">Diundang 0 · Hadir 0 · Tidak hadir 0</span><button class="btn btn-primary" onclick="savePK2()">Simpan Kegiatan</button></div>
         <div class="form-grid" style="margin-bottom:15px"><div class="form-field"><label>Jenis Kegiatan</label><select id="pk2Jenis" class="select"><option>Rapat</option><option>Upacara</option><option>Workshop</option><option>Kegiatan Sekolah</option><option>Lainnya</option></select></div><div class="form-field"><label>Tanggal</label><input id="pk2Tanggal" type="date" class="input"></div><div class="form-field full"><label>Nama Kegiatan</label><input id="pk2Nama" class="input" placeholder="Contoh: Rapat Evaluasi Bulanan"></div></div>
         <div class="filters"><div class="filter-item"><input id="pk2Search" class="input" placeholder="Cari pegawai..." oninput="renderPK2()"></div></div>
         <div class="table-wrap"><table class="table"><thead><tr><th>Pegawai</th><th>Kategori/Jabatan</th><th style="text-align:center">Diundang</th><th style="text-align:center">Hadir</th></tr></thead><tbody id="pk2Body"></tbody></table></div>
@@ -492,9 +492,44 @@ function renderPK2(){
   let html='',lastCat='';
   arr.forEach(p=>{
     if(p.kategori!==lastCat){html+=categoryHeaderRow(p.kategori,4);lastCat=p.kategori;}
-    html+=`<tr><td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(p.id_pegawai)}</small></div></td><td>${esc(p.jabatan||p.kategori)}</td><td style="text-align:center"><input type="checkbox" data-invite="${esc(p.id_pegawai)}" checked></td><td style="text-align:center"><input type="checkbox" data-attend="${esc(p.id_pegawai)}"></td></tr>`;
+    const id=String(p.id_pegawai||'');
+    const safeId=CSS.escape(id);
+    html+=`<tr data-pk2-row="${esc(id)}">
+      <td><div class="name-cell"><strong>${esc(p.nama_pegawai)}</strong><small>${esc(id)}</small></div></td>
+      <td>${esc(p.jabatan||p.kategori)}</td>
+      <td style="text-align:center">
+        <input type="checkbox" id="pk2Invite_${safeId}" data-invite="${esc(id)}" checked
+          onchange="updatePK2RowState_('${esc(id)}')">
+      </td>
+      <td style="text-align:center">
+        <input type="checkbox" id="pk2Attend_${safeId}" data-attend="${esc(id)}"
+          onchange="updatePK2RowState_('${esc(id)}')">
+      </td>
+    </tr>`;
   });
   $('pk2Body').innerHTML=html||'<tr><td colspan="4" class="empty">Tidak ada pegawai yang sesuai.</td></tr>';
+  updatePK2Summary_();
+}
+
+function updatePK2RowState_(id){
+  const row=document.querySelector(`[data-pk2-row="${CSS.escape(String(id))}"]`);
+  if(!row)return;
+  const invite=row.querySelector('[data-invite]');
+  const attend=row.querySelector('[data-attend]');
+  row.classList.toggle('pk2-row-hadir',!!attend?.checked);
+  if(attend?.checked && !invite?.checked){
+    invite.checked=true;
+  }
+  updatePK2Summary_();
+}
+
+function updatePK2Summary_(){
+  const invites=[...document.querySelectorAll('#pk2Body input[data-invite]')];
+  const attends=[...document.querySelectorAll('#pk2Body input[data-attend]')];
+  const invited=invites.filter(x=>x.checked).length;
+  const hadir=attends.filter(x=>x.checked).length;
+  const el=$('pk2Summary');
+  if(el)el.textContent=`Diundang ${invited} · Hadir ${hadir} · Tidak hadir ${Math.max(0,invited-hadir)}`;
 }
 function savePK2(){
   const date=$('pk2Tanggal')?.value||'';
@@ -505,16 +540,17 @@ function savePK2(){
   if(date>todayISO())return toast('Tanggal kegiatan belum terjadi.','error');
 
   const rows=[];
-  let missing=0;
-  let invitedCount=0;
-  let hadirCount=0;
+  let missing=0, invitedCount=0, hadirCount=0;
 
+  // Baca checkbox berdasarkan BARIS pegawai, bukan query global pertama.
+  // Ini mencegah checkbox duplikat/tersembunyi terbaca salah.
   for(const p of employees){
     const id=String(p.id_pegawai||'');
-    const inviteEl=document.querySelector(`[data-invite="${CSS.escape(id)}"]`);
-    const attendEl=document.querySelector(`[data-attend="${CSS.escape(id)}"]`);
+    const row=document.querySelector(`#pk2Body [data-pk2-row="${CSS.escape(id)}"]`);
+    const inviteEl=row?.querySelector('input[data-invite]');
+    const attendEl=row?.querySelector('input[data-attend]');
 
-    if(!inviteEl||!attendEl){
+    if(!row||!inviteEl||!attendEl){
       missing++;
       continue;
     }
@@ -523,25 +559,40 @@ function savePK2(){
     const hadir=attendEl.checked===true;
 
     if(hadir&&!diundang){
-      return toast(`${p.nama_pegawai} ditandai Hadir tetapi belum ditandai Diundang.`,'error');
+      inviteEl.checked=true;
     }
 
-    if(diundang)invitedCount++;
-    if(hadir)hadirCount++;
+    const finalDiundang=inviteEl.checked===true;
+    const finalHadir=attendEl.checked===true;
+
+    if(finalDiundang)invitedCount++;
+    if(finalHadir)hadirCount++;
 
     rows.push({
       id_pegawai:id,
       nama_pegawai:p.nama_pegawai,
       kategori:p.kategori,
       jabatan:p.jabatan,
-      diundang,
-      hadir
+      diundang:finalDiundang,
+      hadir:finalHadir
     });
   }
 
-  if(missing>0)return toast(`Kontrol PK2 tidak lengkap untuk ${missing} pegawai. Silakan muat ulang halaman.`,'error');
+  if(missing>0)return toast(`Kontrol PK2 tidak lengkap untuk ${missing} pegawai. Muat ulang halaman.`,'error');
   if(rows.length!==employees.length)return toast('Data pegawai PK2 tidak lengkap. Tidak ada data yang disimpan.','error');
   if(invitedCount===0)return toast('Belum ada pegawai yang ditandai Diundang.','error');
+  if(hadirCount>invitedCount)return toast('Jumlah Hadir tidak boleh melebihi jumlah Diundang.','error');
+
+  // Tampilkan hasil pembacaan DOM sebelum benar-benar menulis database.
+  console.log('[SISKA PK2] payload summary', {
+    tanggal:date,
+    kegiatan:name,
+    total:rows.length,
+    diundang:invitedCount,
+    hadir:hadirCount,
+    tidakHadir:invitedCount-hadirCount,
+    sample:rows.slice(0,5)
+  });
 
   const tidakHadir=invitedCount-hadirCount;
   if(!window.confirm(
@@ -551,12 +602,13 @@ function savePK2(){
     `Diundang: ${invitedCount} pegawai\n`+
     `Hadir: ${hadirCount} pegawai\n`+
     `Tidak hadir: ${tidakHadir} pegawai\n\n`+
-    `Pastikan jumlah ini sudah benar sebelum menyimpan.`
+    `Jika jumlah ini benar, tekan OK.`
   ))return;
 
   setLoading(true,'Menyimpan PK2...');
   callServer('simpanBatchPK2V2',[date,jenis,name,rows],r=>{
     setLoading(false);
+    console.log('[SISKA PK2] save result',r);
     toast(r?.message||'PK2 selesai diproses.',r?.status||'info');
     if(r?.status==='success'){
       historyPage=1;
