@@ -2301,36 +2301,11 @@ async function simpanBatchPK2V2(
       inviteOnly &&
       table === 'pk2_activities'
     ) {
-      // PK2 legacy compatibility:
-      // Jika seluruh row dalam satu kegiatan tersimpan invited=false,
-      // kegiatan tetap dianggap sebagai kewajiban penilaian.
-      // Jika ada minimal satu invited=true, flag undangan dihormati.
-      const activityGroups = new Map();
-
-      for (const r of rows) {
-        const key =
-          String(r.activity_date || '') + '||' +
-          String(r.activity_name || '');
-
-        let g = activityGroups.get(key);
-        if (!g) {
-          g = { rows: [], hasInvited: false };
-          activityGroups.set(key, g);
-        }
-
-        g.rows.push(r);
-        if (r.invited === true) g.hasInvited = true;
-      }
-
-      rows = [];
-
-      for (const g of activityGroups.values()) {
-        if (g.hasInvited) {
-          rows.push(...g.rows.filter(r => r.invited === true));
-        } else {
-          rows.push(...g.rows);
-        }
-      }
+      // PK2: hanya pegawai yang benar-benar diundang
+      // menjadi kewajiban penilaian.
+      // invited=false + attended=false berarti TIDAK DIUNDANG,
+      // sehingga tidak masuk pembagi/nilai PK2.
+      rows = rows.filter(r => r.invited === true);
     }
 
     if (!rows.length) {
@@ -2595,45 +2570,24 @@ async function simpanBatchPK2V2(
       if (r.status === STATUS_HADIR) x.hadir++;
     }
 
-    // PK2 memakai aturan yang sama dengan scoreBool():
-    // kegiatan legacy yang seluruh row-nya invited=false tetap dihitung.
-    const pk2ActivityMap = new Map();
-
-    for (const r of pk2Rows || []) {
-      const key =
-        String(r.activity_date || '') + '||' +
-        String(r.activity_name || '');
-
-      let g = pk2ActivityMap.get(key);
-      if (!g) {
-        g = { rows: [], hasInvited: false };
-        pk2ActivityMap.set(key, g);
-      }
-
-      g.rows.push(r);
-      if (r.invited === true) g.hasInvited = true;
-    }
-
+    // PK2: hanya pegawai yang benar-benar diundang
+    // menjadi kewajiban penilaian.
     const pk2Map = new Map();
 
-    for (const g of pk2ActivityMap.values()) {
-      const effectiveRows = g.hasInvited
-        ? g.rows.filter(r => r.invited === true)
-        : g.rows;
+    for (const r of pk2Rows || []) {
+      if (r.invited !== true) continue;
 
-      for (const r of effectiveRows) {
-        const id = r.employee_code;
-        if (!id) continue;
+      const id = r.employee_code;
+      if (!id) continue;
 
-        let x = pk2Map.get(id);
-        if (!x) {
-          x = { total: 0, hadir: 0 };
-          pk2Map.set(id, x);
-        }
-
-        x.total++;
-        if (r.attended) x.hadir++;
+      let x = pk2Map.get(id);
+      if (!x) {
+        x = { total: 0, hadir: 0 };
+        pk2Map.set(id, x);
       }
+
+      x.total++;
+      if (r.attended) x.hadir++;
     }
 
     const [pk3Schedules, pk4Schedules] = await Promise.all([
