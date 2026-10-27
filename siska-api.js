@@ -3181,7 +3181,13 @@ async function simpanBatchPK2V2(
 
                   'Hadir'
 
-                : !!x.attended
+                : !!x.attended,
+
+            // Dipakai oleh renderer laporan F4 untuk membedakan
+            // tidak diundang (−) dari diundang tetapi tidak hadir (×).
+            ...(table === 'pk2_activities'
+              ? { diundang: x.invited === true }
+              : {})
 
           });
 
