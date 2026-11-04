@@ -545,7 +545,6 @@
       : 'indicator_weekly_schedules';
 
     let q = sb.from(table).select('*').eq('is_active', true).order('employee_code');
-    if (code === 'PK3') q = q.eq('indicator_code', 'PK3');
 
     const data = await fetchAllRows(() => q);
     return (data || []).map(x => ({
@@ -600,7 +599,6 @@
     }
 
     const people = await getSemuaPegawai();
-    const cm = await categoryMap();
     const pm = Object.fromEntries(people.map(x => [String(x.id_pegawai), x]));
     const payload = [];
     const seen = new Set();
@@ -608,7 +606,7 @@
     (rows || []).forEach(x => {
       const id = clean(x.employee_code);
       const p = pm[id];
-      if (!p || !(cm[p.kategori] || []).includes(code)) return;
+      if (!p) return;
       if (seen.has(id)) return;
       seen.add(id);
       payload.push(normalizeIndicatorScheduleRow(code, x));
@@ -625,9 +623,9 @@
     // Jangan memakai upsert/ON CONFLICT.
     // Ini sengaja dibuat kompatibel dengan database lama PK3 dan tabel PK4 baru.
     const ids = payload.map(x => x.employee_code);
-    let existingQuery = sb.from(table).select('employee_code');
-    if (code === 'PK3') existingQuery = existingQuery.eq('indicator_code', 'PK3');
-    existingQuery = existingQuery.in('employee_code', ids);
+    // employee_code adalah identitas unik jadwal PK3; jangan filter indicator_code
+    // saat mencari existing row karena nilai NULL/legacy akan menyebabkan INSERT duplikat.
+    const existingQuery = sb.from(table).select('employee_code').in('employee_code', ids);
     const { data: existingRows, error: existingError } = await existingQuery;
     if (existingError) throw existingError;
 
@@ -649,10 +647,10 @@
         friday: row.friday,
         saturday: row.saturday,
         sunday: row.sunday,
+        ...(code === 'PK3' ? { indicator_code: 'PK3' } : {}),
         is_active: row.is_active,
         updated_at: new Date().toISOString()
       }).eq('employee_code', row.employee_code);
-      if (code === 'PK3') q = q.eq('indicator_code', 'PK3');
       const { error } = await q;
       if (error) throw error;
     }
@@ -994,6 +992,55 @@
 
 
 
+  // ============================================================
+  // HARI LIBUR SEKOLAH — berlaku untuk PK1, PK3, dan PK4
+  // Tanggal libur tidak menjadi kewajiban; data historis tidak dihapus.
+  // ============================================================
+  async function getHolidayDateSet(startDate, endDate) {
+    let q = sb.from('school_holidays').select('holiday_date').eq('is_active', true);
+    if (startDate) q = q.gte('holiday_date', isoDate(startDate));
+    if (endDate) q = q.lte('holiday_date', isoDate(endDate));
+    const rows = await fetchAllRows(() => q);
+    return new Set((rows || []).map(x => isoDate(x.holiday_date)));
+  }
+
+  async function getSchoolHolidays(startDate, endDate) {
+    await requireLogin();
+    let q = sb.from('school_holidays').select('*').order('holiday_date', { ascending: true });
+    if (startDate) q = q.gte('holiday_date', isoDate(startDate));
+    if (endDate) q = q.lte('holiday_date', isoDate(endDate));
+    return (await fetchAllRows(() => q)).map(x => ({
+      tanggal: isoDate(x.holiday_date),
+      keterangan: x.description || '',
+      jenis: x.holiday_type || 'Libur Sekolah',
+      aktif: x.is_active !== false
+    }));
+  }
+
+  async function saveSchoolHoliday(tanggal, keterangan, jenis = 'Libur Sekolah') {
+    await requireAdmin();
+    const date = isoDate(tanggal);
+    if (!date) throw new Error('Tanggal libur wajib diisi.');
+    const description = clean(keterangan) || 'Hari Libur Sekolah';
+    const holiday_type = clean(jenis) || 'Libur Sekolah';
+    const { error } = await sb.from('school_holidays').upsert({
+      holiday_date: date, description, holiday_type, is_active: true,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'holiday_date' });
+    if (error) throw error;
+    clearSiskaCache();
+    return { status: 'success', message: `Hari libur ${date} berhasil disimpan.` };
+  }
+
+  async function deleteSchoolHoliday(tanggal) {
+    await requireAdmin();
+    const date = isoDate(tanggal);
+    const { error } = await sb.from('school_holidays').delete().eq('holiday_date', date);
+    if (error) throw error;
+    clearSiskaCache();
+    return { status: 'success', message: `Hari libur ${date} berhasil dihapus.` };
+  }
+
   async function getPK1Periode(
 
     startDate,
@@ -1056,8 +1103,11 @@
 
 
 
-    const assign = await fetchAllRows(() => sb.from('pk1_assignments').select('*').eq('is_active', true).gte('assignment_date', startDate).lte('assignment_date', endDate));
-    const rows = await fetchAllRows(() => sb.from('pk1_attendance').select('*').gte('attendance_date', startDate).lte('attendance_date', endDate));
+    const [assign, rows, holidays] = await Promise.all([
+      fetchAllRows(() => sb.from('pk1_assignments').select('*').eq('is_active', true).gte('assignment_date', startDate).lte('assignment_date', endDate)),
+      fetchAllRows(() => sb.from('pk1_attendance').select('*').gte('attendance_date', startDate).lte('attendance_date', endDate)),
+      getHolidayDateSet(startDate, endDate)
+    ]);
 
 
 
@@ -1107,7 +1157,7 @@
 
 
 
-        if (dayFlag(sch, ds)) {
+        if (dayFlag(sch, ds) && !holidays.has(ds)) {
 
           obligations[
 
@@ -1143,7 +1193,7 @@
 
 
 
-      if (a.type === 'Tambah') {
+      if (a.type === 'Tambah' && !holidays.has(a.assignment_date)) {
 
         obligations[key] = true;
 
@@ -1889,18 +1939,18 @@ async function simpanBatchPK2V2(
       throw new Error('Periode PK3 tidak valid.');
     }
 
-    const [data, people, cm, scheduleRows] = await Promise.all([
+    const [data, people, scheduleRows, holidays] = await Promise.all([
       fetchAllRows(() => sb.from('pk3_attendance').select('*')
         .gte('attendance_date', startDate).lte('attendance_date', endDate)),
       getSemuaPegawai(),
-      categoryMap(),
-      getIndicatorWeeklySchedules('PK3')
+      getIndicatorWeeklySchedules('PK3'),
+      getHolidayDateSet(startDate, endDate)
     ]);
 
     const scheduleMap = Object.fromEntries(
       scheduleRows.map(x => [String(x.employee_code), x])
     );
-    const allowed = people.filter(p => (cm[p.kategori] || []).includes('PK3'));
+    const allowed = people;
     const allowedSet = new Set(allowed.map(p => p.id_pegawai));
     const obligations = {};
     const presensi = {};
@@ -1908,7 +1958,7 @@ async function simpanBatchPK2V2(
     for (const p of allowed) {
       const sch = scheduleMap[String(p.id_pegawai)];
       for (let ds = startDate; ds <= endDate; ds = addCalendarDays(ds, 1)) {
-        if (indicatorDayFlag(sch, ds)) {
+        if (indicatorDayFlag(sch, ds) && !holidays.has(ds)) {
           obligations[ds + '|' + p.id_pegawai] = true;
         }
       }
@@ -1929,8 +1979,8 @@ async function simpanBatchPK2V2(
     if (endDate < startDate) throw new Error('Periode PK3 tidak valid.');
     if (endDate > today()) throw new Error('Tanggal belum terjadi sehingga belum dapat diisi.');
 
-    const [people, cm, scheduleRows] = await Promise.all([
-      getSemuaPegawai(), categoryMap(), getIndicatorWeeklySchedules('PK3')
+    const [people, scheduleRows, holidays] = await Promise.all([
+      getSemuaPegawai(), getIndicatorWeeklySchedules('PK3'), getHolidayDateSet(startDate, endDate)
     ]);
     const pm = Object.fromEntries(people.map(x => [x.id_pegawai, x]));
     const scheduleMap = Object.fromEntries(
@@ -1940,9 +1990,9 @@ async function simpanBatchPK2V2(
 
     (dataList || []).forEach(x => {
       const p = pm[x.id_pegawai];
-      const scheduled = p &&
-        (cm[p.kategori] || []).includes('PK3') &&
-        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], x.tanggal);
+      const date = isoDate(x.tanggal);
+      const scheduled = p && !holidays.has(date) &&
+        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], date);
       if (!scheduled) return;
 
       rows.push({
@@ -1998,25 +2048,25 @@ async function simpanBatchPK2V2(
       throw new Error('Periode PK4 tidak valid.');
     }
 
-    const [people, cm, scheduleRows, rows] = await Promise.all([
+    const [people, scheduleRows, rows, holidays] = await Promise.all([
       getSemuaPegawai(),
-      categoryMap(),
       getIndicatorWeeklySchedules('PK4'),
       fetchAllRows(() => sb.from('pk4_attendance').select('*')
-        .gte('attendance_date', startDate).lte('attendance_date', endDate))
+        .gte('attendance_date', startDate).lte('attendance_date', endDate)),
+      getHolidayDateSet(startDate, endDate)
     ]);
 
     const scheduleMap = Object.fromEntries(
       scheduleRows.map(x => [String(x.employee_code), x])
     );
-    const allowed = people.filter(p => (cm[p.kategori] || []).includes('PK4'));
+    const allowed = people;
     const allowedSet = new Set(allowed.map(p => p.id_pegawai));
     const obligations = {};
 
     for (const p of allowed) {
       const sch = scheduleMap[String(p.id_pegawai)];
       for (let ds = startDate; ds <= endDate; ds = addCalendarDays(ds, 1)) {
-        if (!indicatorDayFlag(sch, ds)) continue;
+        if (holidays.has(ds) || !indicatorDayFlag(sch, ds)) continue;
         const expected = global.__siskaPk4Expected(ds);
         if (expected) obligations[ds + '|' + p.id_pegawai] = expected;
       }
@@ -2041,8 +2091,8 @@ async function simpanBatchPK2V2(
     if (endDate < startDate) throw new Error('Periode PK4 tidak valid.');
     if (endDate > today()) throw new Error('Tanggal belum terjadi sehingga belum dapat diisi.');
 
-    const [people, cm, scheduleRows] = await Promise.all([
-      getSemuaPegawai(), categoryMap(), getIndicatorWeeklySchedules('PK4')
+    const [people, scheduleRows, holidays] = await Promise.all([
+      getSemuaPegawai(), getIndicatorWeeklySchedules('PK4'), getHolidayDateSet(startDate, endDate)
     ]);
     const pm = Object.fromEntries(people.map(x => [x.id_pegawai, x]));
     const scheduleMap = Object.fromEntries(
@@ -2052,10 +2102,10 @@ async function simpanBatchPK2V2(
 
     (dataList || []).forEach(x => {
       const p = pm[x.id_pegawai];
-      const scheduled = p &&
-        (cm[p.kategori] || []).includes('PK4') &&
-        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], x.tanggal);
-      const expected = scheduled ? global.__siskaPk4Expected(x.tanggal) : null;
+      const date = isoDate(x.tanggal);
+      const scheduled = p && !holidays.has(date) &&
+        indicatorDayFlag(scheduleMap[String(p.id_pegawai)], date);
+      const expected = scheduled ? global.__siskaPk4Expected(date) : null;
       if (!expected) return;
 
       rows.push({
@@ -2177,14 +2227,14 @@ async function simpanBatchPK2V2(
 
 
 
-    const data = await fetchAllRows(() => q);
+    const [data, holidays] = await Promise.all([fetchAllRows(() => q), getHolidayDateSet(start, end)]);
 
 
 
     // PK1: seluruh hari/kewajiban yang memiliki record dihitung sebagai
     // pembagi. Sakit dan Izin tetap masuk total hari, tetapi hanya Hadir
     // yang masuk pembilang.
-    const vals = data || [];
+    const vals = (data || []).filter(r => !holidays.has(isoDate(r.attendance_date)));
 
     if (!vals.length) {
       return null;
@@ -2472,12 +2522,8 @@ async function simpanBatchPK2V2(
       inds.includes('PK2')
         ? scoreBool('pk2_activities', idPegawai, null, null, true)
         : Promise.resolve(null),
-      inds.includes('PK3')
-        ? scoreBool('pk3_attendance', idPegawai, null, null)
-        : Promise.resolve(null),
-      inds.includes('PK4')
-        ? scoreBool('pk4_attendance', idPegawai, null, null)
-        : Promise.resolve(null)
+      scoreBool('pk3_attendance', idPegawai, null, null),
+      scoreBool('pk4_attendance', idPegawai, null, null)
     ]);
 
     const s = { pk1, pk2, pk3, pk4 };
@@ -2486,7 +2532,7 @@ async function simpanBatchPK2V2(
 
       finalScore(
 
-        inds,
+        [...new Set([...inds, 'PK3', 'PK4'])],
 
         s
 
@@ -2500,7 +2546,7 @@ async function simpanBatchPK2V2(
 
       rerata: f.rerata,
 
-      indikator: inds
+      indikator: [...new Set([...inds, 'PK3', 'PK4'])]
 
     };
 
@@ -2535,10 +2581,10 @@ async function simpanBatchPK2V2(
 
     // Ambil seluruh transaksi yang diperlukan hanya sekali.
     // Hanya kolom yang dibutuhkan dashboard yang diambil.
-    const [pk1Rows, pk2Rows, pk3Rows, pk4Rows] = await Promise.all([
+    const [pk1Rows, pk2Rows, pk3Rows, pk4Rows, holidays] = await Promise.all([
       fetchAllRows(() =>
         sb.from('pk1_attendance')
-          .select('employee_code,status')
+          .select('employee_code,status,attendance_date')
       ),
       fetchAllRows(() =>
         sb.from('pk2_activities')
@@ -2551,12 +2597,14 @@ async function simpanBatchPK2V2(
       fetchAllRows(() =>
         sb.from('pk4_attendance')
           .select('employee_code,attendance_date,activity_type,attended')
-      )
+      ),
+      getHolidayDateSet(null, null)
     ]);
 
     // Bentuk agregasi per pegawai di memory.
     const pk1Map = new Map();
     for (const r of pk1Rows || []) {
+      if (holidays.has(isoDate(r.attendance_date))) continue;
       const id = r.employee_code;
       if (!id) continue;
       let x = pk1Map.get(id);
@@ -2603,6 +2651,7 @@ async function simpanBatchPK2V2(
 
     const pk3Map = new Map();
     for (const r of pk3Rows || []) {
+      if (holidays.has(isoDate(r.attendance_date))) continue;
       if (!indicatorDayFlag(
         pk3ScheduleMap[String(r.employee_code)],
         r.attendance_date
@@ -2620,6 +2669,7 @@ async function simpanBatchPK2V2(
 
     const pk4Map = new Map();
     for (const r of pk4Rows || []) {
+      if (holidays.has(isoDate(r.attendance_date))) continue;
       if (
         !indicatorDayFlag(
           pk4ScheduleMap[String(r.employee_code)],
@@ -2662,15 +2712,15 @@ async function simpanBatchPK2V2(
       const s = {
         pk1: inds.pk1 ? calcPK1(p.id_pegawai) : null,
         pk2: inds.pk2 ? calcBool(pk2Map)(p.id_pegawai) : null,
-        pk3: inds.pk3 ? calcBool(pk3Map)(p.id_pegawai) : null,
-        pk4: inds.pk4 ? calcBool(pk4Map)(p.id_pegawai) : null
+        pk3: calcBool(pk3Map)(p.id_pegawai),
+        pk4: calcBool(pk4Map)(p.id_pegawai)
       };
 
       Object.keys(avgs).forEach(k => {
         if (s[k] != null) avgs[k].push(s[k]);
       });
 
-      scoreRows.push({ p, inds, s });
+      scoreRows.push({ p, inds: { ...inds, pk3: true, pk4: true }, s });
     }
 
     const avg = k =>
@@ -2707,6 +2757,7 @@ async function simpanBatchPK2V2(
 
     recentSources.forEach(([table, dateCol], index) => {
       for (const x of recentResults[index]) {
+        if (['pk1_attendance','pk3_attendance','pk4_attendance'].includes(table) && holidays.has(isoDate(x[dateCol]))) continue;
         if (
           table === 'pk3_attendance' &&
           !indicatorDayFlag(
@@ -2938,41 +2989,13 @@ async function simpanBatchPK2V2(
 
         pk3:
 
-          inds.includes('PK3')
-
-            ? await scoreBool(
-
-                'pk3_attendance',
-
-                p.id_pegawai,
-
-                startDate,
-
-                endDate
-
-              )
-
-            : null,
+          await scoreBool('pk3_attendance', p.id_pegawai, startDate, endDate),
 
 
 
         pk4:
 
-          inds.includes('PK4')
-
-            ? await scoreBool(
-
-                'pk4_attendance',
-
-                p.id_pegawai,
-
-                startDate,
-
-                endDate
-
-              )
-
-            : null
+          await scoreBool('pk4_attendance', p.id_pegawai, startDate, endDate)
 
       };
 
@@ -2982,7 +3005,7 @@ async function simpanBatchPK2V2(
 
         finalScore(
 
-          inds,
+          [...new Set([...inds, 'PK3', 'PK4'])],
 
           s
 
@@ -3728,41 +3751,13 @@ async function simpanBatchPK2V2(
 
           pk3:
 
-            inds.includes('PK3')
-
-              ? await scoreBool(
-
-                  'pk3_attendance',
-
-                  p.id_pegawai,
-
-                  startDate,
-
-                  endDate
-
-                )
-
-              : null,
+            await scoreBool('pk3_attendance', p.id_pegawai, startDate, endDate),
 
 
 
           pk4:
 
-            inds.includes('PK4')
-
-              ? await scoreBool(
-
-                  'pk4_attendance',
-
-                  p.id_pegawai,
-
-                  startDate,
-
-                  endDate
-
-                )
-
-              : null
+            await scoreBool('pk4_attendance', p.id_pegawai, startDate, endDate)
 
         };
 
@@ -3772,7 +3767,7 @@ async function simpanBatchPK2V2(
 
           finalScore(
 
-            inds,
+            [...new Set([...inds, 'PK3', 'PK4'])],
 
             s
 
@@ -6050,6 +6045,9 @@ async function getRiwayatPKAgregasiV2(
     getIndicatorWeeklySchedules,
     saveIndicatorWeeklySchedule,
     saveIndicatorWeeklySchedulesBatch,
+    getSchoolHolidays,
+    saveSchoolHoliday,
+    deleteSchoolHoliday,
 
 
 

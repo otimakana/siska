@@ -165,6 +165,17 @@
     </div>
 
     <div class="card section" style="margin-top:16px">
+      <div class="section-head"><div><h3>Hari Libur Sekolah</h3><span class="muted">Tanggal libur mengecualikan kewajiban PK1, PK3, dan PK4. Data historis tidak dihapus.</span></div></div>
+      <div class="form-grid" style="grid-template-columns:180px 1fr 180px auto;align-items:end;margin-bottom:14px">
+        <div class="form-field"><label>Tanggal Libur</label><input id="schoolHolidayDate" type="date" class="input"></div>
+        <div class="form-field"><label>Keterangan</label><input id="schoolHolidayDescription" class="input" placeholder="Contoh: Libur Nasional / Cuti Bersama"></div>
+        <div class="form-field"><label>Jenis</label><select id="schoolHolidayType" class="select"><option>Libur Nasional</option><option>Libur Sekolah</option><option>Cuti Bersama</option><option>Libur Khusus</option></select></div>
+        <button class="btn btn-primary" onclick="saveSchoolHolidayUI_()">Simpan Libur</button>
+      </div>
+      <div id="schoolHolidayList" class="assignment-list"><div class="empty">Memuat daftar hari libur...</div></div>
+    </div>
+
+    <div class="card section" style="margin-top:16px">
       <div class="section-head"><div><h3>Ringkasan Logika</h3><span class="muted">Kewajiban aktual = Jadwal Dasar + Penugasan Tambah − Pembatalan.</span></div></div>
       <div class="schedule-flow"><span>PK1: Jadwal Dasar + Penugasan</span><b>→</b><strong>Kewajiban PK1</strong><b>→</b><span>Presensi</span><b>→</b><strong>Nilai PK1</strong></div>
       <div class="schedule-flow" style="margin-top:8px"><span>PK3/PK4: Jadwal Khusus per Pegawai × Hari</span><b>→</b><strong>Kewajiban PK3/PK4</strong><b>→</b><span>Pengisian</span><b>→</b><strong>Nilai</strong></div>
@@ -220,7 +231,7 @@
         <div class="pk1-category-picker pk3-category-picker">
           <div class="pk1-category-label">
             <div class="pk1-category-title">Kategori yang Diisi</div>
-            <div class="pk1-category-sub">Pilih satu kategori untuk menampilkan pegawai PK3.</div>
+            <div class="pk1-category-sub">Pilih satu kategori untuk memudahkan penyaringan pegawai PK3. Semua kategori dapat dijadwalkan.</div>
           </div>
           <div class="pk1-category-select-wrap">
             <select id="pk3CategorySelect" class="select pk1-category-select" onchange="setPK3CatSelect(this.value)">
@@ -237,7 +248,7 @@
     <div id="pk4Panel" class="hidden">
       <div class="card section">
         <div class="section-head">
-          <div><h3>PK4 · Pembiasaan</h3><span class="muted">Pengisian mingguan mengikuti jadwal pembiasaan sekolah. Hanya kategori yang memiliki PK4 yang ditampilkan.</span></div>
+          <div><h3>PK4 · Pembiasaan</h3><span class="muted">Pengisian mengikuti jadwal khusus PK4 yang dicentang untuk setiap pegawai, tanpa dibatasi kategori.</span></div>
           <button class="btn btn-primary" onclick="savePK4()">Simpan PK4</button>
         </div>
         <div class="pk4-range-bar">
@@ -411,7 +422,7 @@ function enterApp(){
 }
 
 function toggleSidebar(){$('sidebar').classList.toggle('open')}
-function showView(v){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$('view-'+v).classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$('topTitle').textContent={dashboard:'Dashboard',pegawai:'Data Pegawai',kategori:'Kategori Penilaian',jabatan:'Master Jabatan',jadwal:'Jadwal & Penugasan',pk:'Input Kinerja',grafik:'Grafik Kinerja',laporan:'Laporan F4',rekap:'Rekap Kepegawaian',export:'Export Data',users:'Manajemen User'}[v]||'SISKA';if(window.innerWidth<760)$('sidebar').classList.remove('open');if(v==='dashboard')loadDashboard();if(v==='pegawai'){renderEmployees();refreshEmployeeScheduleOptions_();}if(v==='kategori')renderCategoryConfig_();if(v==='jabatan')renderJobs();if(v==='jadwal'){renderSchedules();refreshEmployeeScheduleOptions_();loadAssignments();loadIndicatorSchedules_();}if(v==='pk'){if(!employees.length)return;switchPK(activePK)}if(v==='grafik'){populateChartEmployees()}if(v==='laporan'){populateReportEmployees()}if(v==='rekap'){updateRekapCategoryOptions_()}if(v==='users')loadUsers()}
+function showView(v){document.querySelectorAll('.view').forEach(x=>x.classList.add('hidden'));$('view-'+v).classList.remove('hidden');document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$('topTitle').textContent={dashboard:'Dashboard',pegawai:'Data Pegawai',kategori:'Kategori Penilaian',jabatan:'Master Jabatan',jadwal:'Jadwal & Penugasan',pk:'Input Kinerja',grafik:'Grafik Kinerja',laporan:'Laporan F4',rekap:'Rekap Kepegawaian',export:'Export Data',users:'Manajemen User'}[v]||'SISKA';if(window.innerWidth<760)$('sidebar').classList.remove('open');if(v==='dashboard')loadDashboard();if(v==='pegawai'){renderEmployees();refreshEmployeeScheduleOptions_();}if(v==='kategori')renderCategoryConfig_();if(v==='jabatan')renderJobs();if(v==='jadwal'){renderSchedules();refreshEmployeeScheduleOptions_();loadAssignments();loadIndicatorSchedules_();loadSchoolHolidays_();}if(v==='pk'){if(!employees.length)return;switchPK(activePK)}if(v==='grafik'){populateChartEmployees()}if(v==='laporan'){populateReportEmployees()}if(v==='rekap'){updateRekapCategoryOptions_()}if(v==='users')loadUsers()}
 function renderCategoryChart(d){if(categoryChart)categoryChart.destroy();const cats=d.categories||[];categoryChart=new Chart($('categoryChart'),{type:'doughnut',data:{labels:cats.map(c=>c.nama_kategori),datasets:[{data:cats.map(c=>Number(d.categoryCounts?.[c.nama_kategori]||0)),backgroundColor:cats.map((_,i)=>['#1769e0','#10a36b','#7957d5','#e09a17','#d04b7b','#4c8dca'][i%6]),borderWidth:0}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:10}}}},cutout:'68%'}})}
 
 function renderDashboardKPIs_(d){
@@ -528,12 +539,12 @@ function renderIndicatorSchedules_(){
   const head=$('indicatorScheduleHead'),body=$('indicatorScheduleBody');
   if(!head||!body)return;
   const days=[['monday','Sen'],['tuesday','Sel'],['wednesday','Rab'],['thursday','Kam'],['friday','Jum'],['saturday','Sab'],['sunday','Min']];
-  const allowed=new Set((categories||[]).filter(c=>c.status_aktif!==false&&c[indicatorScheduleCode.toLowerCase()]).map(c=>c.nama_kategori));
-  const list=sortEmployeesByCategory(employees.filter(p=>allowed.has(p.kategori)));
+  // Semua kategori boleh dijadwalkan PK3/PK4; kewajiban ditentukan hanya oleh checklist hari.
+  const list=sortEmployeesByCategory(employees.filter(p=>p.status_aktif!==false));
   head.innerHTML='<tr><th style="min-width:260px">Pegawai</th>'+days.map(d=>`<th>${d[1]}</th>`).join('')+'<th>Status</th></tr>';
   const map=Object.fromEntries(indicatorSchedules.map(x=>[String(x.employee_code),x]));
   if(!list.length){
-    body.innerHTML=`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai yang dinilai ${indicatorScheduleCode} pada konfigurasi kategori.</td></tr>`;
+    body.innerHTML=`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai aktif.</td></tr>`;
     return;
   }
   body.innerHTML=list.map(p=>{
@@ -576,6 +587,26 @@ function saveIndicatorSchedules_(){
     toast(r.message,r.status);
     if(r.status==='success')loadIndicatorSchedules_();
   });
+}
+
+function loadSchoolHolidays_(){
+  const box=$('schoolHolidayList');if(!box)return;
+  callServer('getSchoolHolidays',[],rows=>{
+    rows=Array.isArray(rows)?rows:[];
+    if(!rows.length){box.innerHTML='<div class="empty">Belum ada hari libur yang diatur.</div>';return;}
+    box.innerHTML=rows.map(x=>`<div class="assignment-item"><div><strong>${fmtDate(x.tanggal)}</strong><small>${esc(x.jenis||'Libur Sekolah')} · ${esc(x.keterangan||'')}</small></div><button class="btn btn-danger" onclick="deleteSchoolHolidayUI_('${esc(x.tanggal)}')">Hapus</button></div>`).join('');
+  });
+}
+function saveSchoolHolidayUI_(){
+  const date=$('schoolHolidayDate')?.value||'',desc=$('schoolHolidayDescription')?.value||'',type=$('schoolHolidayType')?.value||'Libur Sekolah';
+  if(!date)return toast('Tanggal libur wajib diisi.','error');
+  if(!desc.trim())return toast('Keterangan hari libur wajib diisi.','error');
+  if(!confirm(`Tetapkan ${fmtDate(date)} sebagai hari libur? Tanggal ini akan dikecualikan dari perhitungan PK1, PK3, dan PK4.`))return;
+  setLoading(true);callServer('saveSchoolHoliday',[date,desc,type],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success'){ $('schoolHolidayDate').value='';$('schoolHolidayDescription').value='';loadSchoolHolidays_();loadDashboard(true); }});
+}
+function deleteSchoolHolidayUI_(date){
+  if(!confirm(`Hapus pengaturan libur ${fmtDate(date)}? Kewajiban jadwal pada tanggal tersebut akan berlaku kembali.`))return;
+  setLoading(true);callServer('deleteSchoolHoliday',[date],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success'){loadSchoolHolidays_();loadDashboard(true);}});
 }
 
 function loadSchedules(done){if(masterState.schedules){renderSchedules();refreshEmployeeScheduleOptions_();if(typeof done==='function')done(schedules);return}callServer('getMasterJadwalDasar',[],d=>{schedules=Array.isArray(d)?d:[];masterState.schedules=true;renderSchedules();refreshEmployeeScheduleOptions_();if(typeof done==='function')done(schedules)})}
@@ -817,10 +848,9 @@ function renderPK3(){
   if(!days.length){$('pk3Body').innerHTML='<tr><td colspan="20" class="empty">Rentang tanggal belum valid.</td></tr>';return}
   if(days.length>31){toast('Maksimal 31 hari per tampilan.','error');return}
   $('pk3WeekLabel').textContent=`${fmtDate(start)} — ${fmtDate(end)}`;
-  const applicable=new Set((categories||[]).filter(c=>c.status_aktif!==false&&c.pk3).map(c=>c.nama_kategori));
-  const arr=sortEmployeesByCategory(employees.filter(p=>applicable.has(p.kategori)&&(!pk3Cat||p.kategori===pk3Cat)&&(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));
+  const arr=sortEmployeesByCategory(employees.filter(p=>(!pk3Cat||p.kategori===pk3Cat)&&(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));
   $('pk3Head').innerHTML='<tr><th>Pegawai</th>'+days.map(d=>`<th>${d.toLocaleDateString('id-ID',{weekday:'short'})}<br>${d.getDate()}</th>`).join('')+'<th>Ringkas</th></tr>';
-  if(!arr.length){$('pk3Body').innerHTML=`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai yang memiliki PK3 pada konfigurasi kategori.</td></tr>`;return}
+  if(!arr.length){$('pk3Body').innerHTML=`<tr><td colspan="${days.length+2}" class="empty">Tidak ada pegawai yang sesuai filter.</td></tr>`;return}
   setLoading(true);
   callServer('getPK3Periode',[start,end],data=>{
     setLoading(false);
@@ -863,8 +893,7 @@ function changePK4Status_(el){
 }
 function savePK3(){
   initPK3Range_();const days=pk3Dates_(),start=$('pk3Start').value,end=$('pk3End').value,today=todayISO();
-  const applicable=new Set((categories||[]).filter(c=>c.status_aktif!==false&&c.pk3).map(c=>c.nama_kategori));
-  const rows=[];document.querySelectorAll('[data-pk3]').forEach(el=>{if(el.dataset.date>today||!el.value)return;const p=employees.find(x=>x.id_pegawai===el.dataset.pk3);if(!p||!applicable.has(p.kategori))return;rows.push({tanggal:el.dataset.date,id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,hadir:el.value==='Hadir'})});
+  const rows=[];document.querySelectorAll('[data-pk3]').forEach(el=>{if(el.dataset.date>today||!el.value)return;const p=employees.find(x=>x.id_pegawai===el.dataset.pk3);if(!p)return;rows.push({tanggal:el.dataset.date,id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,hadir:el.value==='Hadir'})});
   if(!rows.length)return toast('Tidak ada data PK3 yang dapat disimpan.','error');
   setLoading(true);callServer('simpanBatchPK3Periode',[start,end,rows],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success'){loadDashboard();renderPK3();loadHistory()}})
 }
@@ -908,14 +937,13 @@ function renderPK4(){
   const days=pk4Dates_(),start=$('pk4RangeStart').value,end=$('pk4RangeEnd').value,today=todayISO(),q=($('pk4Search')?.value||'').toLowerCase();
   if(!days.length){$('pk4Body').innerHTML='<tr><td class="empty">Rentang tanggal belum valid.</td></tr>';return}
   $('pk4WeekLabel').textContent=`${fmtDate(start)} — ${fmtDate(end)}`;
-  const applicable=new Set((categories||[]).filter(c=>c.status_aktif!==false&&c.pk4).map(c=>c.nama_kategori));
-  const arr=sortEmployeesByCategory(employees.filter(p=>applicable.has(p.kategori)&&(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));
+  const arr=sortEmployeesByCategory(employees.filter(p=>(!q||String(p.nama_pegawai||'').toLowerCase().includes(q))));
   setLoading(true);
   callServer('getPK4Periode',[start,end],data=>{
     setLoading(false);data=data||{};const obligations=data.obligations||{},existing=data.presensi||{};
     const scheduled=days.filter(d=>arr.some(p=>obligations[iso(d)+'|'+p.id_pegawai]));
     $('pk4Head').innerHTML='<tr><th>Pegawai</th>'+scheduled.map(d=>{const type=[...arr.map(p=>obligations[iso(d)+'|'+p.id_pegawai]).filter(Boolean)][0]||pk4Activity_(d);return `<th>${d.toLocaleDateString('id-ID',{weekday:'short'})}<br>${d.getDate()} · ${esc(type)}</th>`}).join('')+'<th>Ringkas</th></tr>';
-    if(!arr.length){$('pk4Body').innerHTML=`<tr><td colspan="2" class="empty">Tidak ada pegawai yang memiliki PK4 pada konfigurasi kategori.</td></tr>`;return}
+    if(!arr.length){$('pk4Body').innerHTML=`<tr><td colspan="2" class="empty">Tidak ada pegawai yang sesuai filter.</td></tr>`;return}
     if(!scheduled.length){$('pk4Body').innerHTML=`<tr><td colspan="2" class="empty">Tidak ada kewajiban PK4 pada rentang ${fmtDate(start)} — ${fmtDate(end)}.</td></tr>`;return}
     let html='',lastCat='',total=0,filled=0;
     arr.forEach(p=>{
@@ -936,8 +964,7 @@ function renderPK4(){
 }
 function savePK4(){
   initPK4Range_();const days=pk4Dates_(),start=$('pk4RangeStart').value,end=$('pk4RangeEnd').value;
-  const applicable=new Set((categories||[]).filter(c=>c.status_aktif!==false&&c.pk4).map(c=>c.nama_kategori));
-  const rows=[];document.querySelectorAll('[data-pk4]').forEach(el=>{const p=employees.find(x=>x.id_pegawai===el.dataset.pk4);if(!p||!applicable.has(p.kategori)||el.dataset.date>todayISO())return;rows.push({tanggal:el.dataset.date,jenis_pembiasaan:el.dataset.type,id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,hadir:el.value==='Hadir'})});
+  const rows=[];document.querySelectorAll('[data-pk4]').forEach(el=>{const p=employees.find(x=>x.id_pegawai===el.dataset.pk4);if(!p||el.dataset.date>todayISO())return;rows.push({tanggal:el.dataset.date,jenis_pembiasaan:el.dataset.type,id_pegawai:p.id_pegawai,nama_pegawai:p.nama_pegawai,kategori:p.kategori,jabatan:p.jabatan,hadir:el.value==='Hadir'})});
   if(!rows.length)return toast('Tidak ada data PK4 yang dapat disimpan pada rentang ini.','error');
   setLoading(true);callServer('simpanBatchPK4Periode',[start,end,rows],r=>{setLoading(false);toast(r.message,r.status);if(r.status==='success'){dashboardClientCache_={at:0,data:null};loadDashboard(true);renderPK4();loadHistory()}})
 }
